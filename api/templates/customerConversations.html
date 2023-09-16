@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Conversations</title>
+</head>
+<body>
+    <h2>Conversations</h2>
+    {% for i in all_user_sessions %}
+        <a href="{% url 'notification' user_id i.session_id %}">{{ i }}</a> started_at:-{{ i.created_at }}<br><br>
+    {% endfor %}
+    <a href="{% url 'create_new_session' user %}">Start New Conversation</a>
+</body>
+</html>

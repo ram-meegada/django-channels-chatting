@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat App</title>
+
+</head>
+<body>
+    <div class="chat-window">
+        {% for i in all_messages %}
+            {{ i.user_message }}<br><br>
+        {% endfor %}
+        <div id="messages"></div>
+        <input type="text" id="messageInput" placeholder="Enter your message">
+        <button id="sendMessageButton">Send Message</button>
+    </div>
+
+    <script>
+        var messagesDiv = document.getElementById('messages');
+        var messageInput = document.getElementById('messageInput');
+        var sendMessageButton = document.getElementById('sendMessageButton');
+        var wsUrl = 'wss://45e6-112-196-43-19.ngrok-free.app/ws/chatting/{{ user1 }}/{{ user2 }}/';
+        var logged_in_user = '{{ sender }}'
+        var ws = new WebSocket(wsUrl);
+
+        ws.onopen = function() {
+            appendMessage('');
+        };
+
+        ws.onmessage = function(event) {
+            appendMessage(event.data);
+        };
+
+        ws.onerror = function(event) {
+            appendMessage('WebSocket error occurred');
+        };
+
+        ws.onclose = function(event) {
+            appendMessage('WebSocket connection closed');
+        };
+
+        sendMessageButton.addEventListener('click', function() {
+            var message = messageInput.value;
+            if (message.trim() !== '') {
+                ws.send(message);
+                messageInput.value = ''; // Clear the input field
+            }
+        });
+
+        function appendMessage(message) {
+            var messageElement = document.createElement('p');
+            messageElement.textContent = message;
+            messagesDiv.appendChild(messageElement);
+        }
+        function handleTypingStatus(eventData) {
+            var user_id = eventData.user_id;
+            var user_name = eventData.user_name;
+            var is_typing = eventData.is_typing;
+    
+            if (user_id !== logged_in_user) {
+                var typingStatus = is_typing ? 'Typing...' : '';
+                var typingIndicator = document.getElementById('typingIndicator');
+    
+                if (typingIndicator) {
+                    typingIndicator.textContent = typingStatus;
+                } else {
+                    var typingElement = document.createElement('p');
+                    typingElement.id = 'typingIndicator';
+                    typingElement.textContent = typingStatus;
+                    messagesDiv.appendChild(typingElement);
+                }
+            }
+        }    
+    </script>
+</body>
+</html>

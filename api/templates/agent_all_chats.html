@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Chatting</title>
+</head>
+<body>
+    <h2>Your Assigned Chats {{ user }}</h2>
+    {% for i in all_agent_chats %}
+        chat with:-
+        <a href="{% url 'notification' i.user.id i.session_id %}">{{i.user.first_name}}</a><br><br>
+    {% endfor %}<br><br>
+    <a href="{% url 'logout' %}">logout</a><br>
+</body>
+</html>

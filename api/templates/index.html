@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tunix Bot</title>
+</head>
+<body>
+    <h1>WebSocket Chat</h1>
+    <textarea id="chat-log" cols="100" rows="20"></textarea><br>
+    <input type="text" id="chat-message-input" size="100"><br>
+    <input type="button" value="send" id="chat-message-submit"> 
+    {{groupname|json_script:"group-name"}}
+    
+    <script>
+        const groupName = JSON.parse(document.getElementById('group-name').textContent)
+        console.log(groupName)
+        var wsUrl = 'ws://127.0.0.1:8000/ws/sc/';
+        var ws = new WebSocket(wsUrl + groupName + '/');
+
+        ws.onopen = function() {
+            console.log('WebSocket connection open');
+        }
+
+        ws.onmessage = function(event) {
+            console.log('Bot:-' + event.data)
+            const data1 = JSON.parse(event.data)
+            console.log('actual data: ', data1)
+            document.querySelector('#chat-log').value += (data1.msg + '\n')
+        }
+ 
+        ws.onerror = function(event) {
+            console.log('WebSocket error occurred');
+        }
+
+        ws.onclose = function(event) {
+            console.log('WebSocket connection closed');
+        }
+        document.getElementById("chat-message-submit").onclick = 
+        function(event) {
+            const messageInputDom = document.getElementById("chat-message-input")
+            const message = messageInputDom.value
+            ws.send(JSON.stringify({
+                'msg': message
+            }))
+            messageInputDom.value = ""
+        }
+    </script>
+</body>
+</html>

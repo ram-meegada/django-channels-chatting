@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Queued Sessions</title>
+</head>
+<body>
+    <h2>Queued Sessions</h2>
+    {% for i in queued_sessions %}
+        {{ forloop.counter }}:-
+        {{i.user.first_name}}'s session
+        <label for="myDropdown">Assign agent:</label>
+        <select id="myDropdown" name="agents">
+            {% for j in all_agents %}
+                <option data-url="{% url 'assignagent' i.session_id j.email %}">{{j.first_name}}</option>
+            {% endfor %}    
+        </select>
+        <script>
+            document.getElementById('myDropdown').addEventListener('change', function() {
+                var selectedOption = this.options[this.selectedIndex];
+                var url = selectedOption.getAttribute('data-url');
+                if (url) {
+                    window.location.href = url;
+                }
+            });
+        </script> 
+    {% endfor %}
+    <a href="{% url 'logout' %}">logout</a><br>
+</body>
+</html>

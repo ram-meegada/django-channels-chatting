@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Chats</title>
+</head>
+<body>
+    <h1>Chat with friends</h1>
+    {% for i in all_chats %}
+        <a href="{{ i.link }}">chat with {{ i.email }}</a><br><br>
+    {% endfor %}
+    <a href="{% url 'logout' %}">logout</a><br>
+</body>
+</html>
+
+<!-- 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat App</title>
+</head>
+<body style="
+    margin: 0;
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f0f0f0;
+    ">
+    
+    {% for i in all_chats %}
+        <div style="
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            border-radius: 5px;
+            width: 400px;
+            text-align: left;
+        ">
+            <div style="
+                text-align: left;
+                margin-bottom: 10px;
+            ">
+                <h2>Chat with Friend</h2>
+            </div>
+                <div style="text-align: left;">
+                    {{ i }}<br>
+                </div>
+            </div>
+    {% endfor %}
+
+</body>
+</html> -->
+

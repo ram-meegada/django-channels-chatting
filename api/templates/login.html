@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>login</title>
+<style>
+    .container{
+        background-color: cyan;
+        padding: 20px;
+        width: 200px;
+        margin: auto;
+        margin-top: 125px;
+    }
+    input{
+        display:block;
+        padding: 13px;
+        border: 1px solid #050505;
+        border-radius: 2px;
+        box-sizing:border-box;
+        margin-top: 2px;
+        margin-bottom: 12px;
+        width: 195px;
+    }
+    h2{
+        margin-top: 0px;
+        margin-bottom: 1px;
+    }
+    input[type=submit]{
+        background-color: rgb(62, 248, 6);
+        color: white;
+        padding: 10px;
+        cursor: pointer;
+    }
+    ul{
+        position: relative;
+        background-color: red;
+        padding: 5px;
+        width: 250px;
+        margin: auto;
+      }
+    .create{
+        background-color:lightblue;
+        padding: 10px;
+        width: 200px;
+        margin: auto;
+        margin-top: 10px;
+        color: black;
+        font-weight: bold;
+    }
+    input[type=button]{background-color: lightsalmon; color: black;
+    border: 1px solid black;
+    }
+    a{
+        color: black;
+    }
+</style>    
+</head>
+<body bgcolor="lightblue">
+    <div class="container">
+        <h2>Login Here</h2>
+        <form action="" method="POST">{% csrf_token %}<br>
+            <label for="email"></label>
+            <input type="text" id="email" name="email" placeholder="email" required>
+            <label for="pwd"></label>
+            <input type="password" id="password" name="password" placeholder="Password" >
+            <input type="submit" value="Log In">
+        </form>    
+    </div><br>
+    <div class="messenger">
+        {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+            <li {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}</div>
+</body>
+</html>

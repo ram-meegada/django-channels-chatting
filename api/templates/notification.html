@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat App</title>
+
+</head>
+<body id="body">
+    <img src="{{ profile_picture.url }}" alt="{{ username_in_chatting }}'s Profile Picture" style="width: 30px; height: 30px; border-radius: 50%;">
+    <div class="chat-window">
+        <h1>chat here {{ username_in_chatting }}</h1>
+        {% for i in get_chat_of_customer_session %}
+            {{ i.user_input }}<br><br>
+        {% endfor %}
+        <div id="messages"></div>
+        <input type="text" id="messageInput" placeholder="Enter your message">
+        <button id="sendMessageButton">Send Message</button>
+    </div>
+
+    <script>
+        var messagesDiv = document.getElementById('messages');
+        var messageInput = document.getElementById('messageInput');
+        var sendMessageButton = document.getElementById('sendMessageButton');
+        var wsUrl = 'wss://a8d1-122-160-196-233.ngrok-free.app/ws/agentuserchatting/{{ user_id }}/abc/{{ session_id }}/';
+        var ws = new WebSocket(wsUrl);
+        
+        ws.onopen = function() {
+            appendMessage('connection established');
+        };
+
+        ws.onmessage = function(event) {
+            var profilePicture = document.createElement("img");
+            profilePicture.src = "{{ profile_picture.url }}"; 
+            profilePicture.alt = "{{ username_in_chatting }}'s Profile Picture";
+            profilePicture.style.width = "30px";
+            profilePicture.style.height = "30px";
+            profilePicture.style.borderRadius = "50%";
+            if (event.data.includes(':chat_message')) {
+                appendMessage(event.data.slice(0,-13))
+            }
+            else{
+                var jsonData = JSON.parse(event.data);
+                document.getElementById('body').appendChild(profilePicture);
+                appendMessage('{{username_in_chatting}}' + ':-' + jsonData.customer);
+                appendMessage('Bot:- ' + jsonData.Bot);
+            }
+        };
+
+        ws.onerror = function(event) {
+            appendMessage('WebSocket error occurred');
+        };
+ 
+        ws.onclose = function(event) {
+            appendMessage('WebSocket connection closed');
+        };
+
+        sendMessageButton.addEventListener('click', function() {
+            var message = messageInput.value;
+            if (message.trim() !== '') {
+                ws.send(message);
+                appendMessage(event.data, 'event data')
+                messageInput.value = '';
+               // if ('{{get_session}}' !== "None") {
+                //}
+               // else {
+                 //   appendMessage('{{username_in_chatting}}' + ':' + message)
+             //   }
+            }
+        });
+
+        function appendMessage(message) {
+            var messageElement = document.createElement('p');
+            messageElement.textContent = message;
+            messagesDiv.appendChild(messageElement);
+        }
+    </script>
+</body>
+</html>
