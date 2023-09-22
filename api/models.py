@@ -44,7 +44,7 @@ class User(AbstractUser):
     profile_picture = models.ImageField(upload_to='profile_pictures/', blank=True, null=True)
     email = models.EmailField(unique=True, max_length=255, null=True, blank=True)
     password = models.CharField(max_length=255, null=True, blank=True)
-    role_of_user = models.CharField(choices=USER_ROLE_CHOICES, default='4')
+    role_of_user = models.CharField(choices=USER_ROLE_CHOICES, default='4', max_length=100)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']

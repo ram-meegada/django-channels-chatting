@@ -44,5 +44,5 @@ urlpatterns = [
     path('user/chat-with-chatbot/<int:user_id>/<str:session_id>/', ChatWithChatbotAndAgentView.as_view(), name='notification'),
     path('queued-session-chats/', GetAllQueuedChatsToAdminView.as_view(), name='queuedsession'),
     path('assign-agent-to-user-session/<str:session>/<str:user>/', AdminAssignAgentToUserSessionView.as_view(), name='assignagent'),
-    path('agent/all-customer-chats/', AgentAllCustomerChatsView.as_view(), name="agentallcustomerchats")
+    path('agent/all-customer-chats/', AgentAllCustomerChatsView.as_view(), name="agentallcustomerchats"),
 ]

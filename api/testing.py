@@ -185,3 +185,12 @@ production_key = api_key_field.split(':')[0]
 sandbox_key = api_key_field.split(':')[1]    
 
 print('api_key_field',api_key_field,'\n', production_key, '\n',sandbox_key)    
+# message=xml_payload['{http://tempuri.org/}msg1'],
+#                                                      messageType=xml_payload['{http://tempuri.org/}ERX001'],
+#                                                      conversationId=xml_payload['{http://tempuri.org/}2HTWKVQHXG5PR524D5'],
+#                                                      entityId=xml_payload['{http://tempuri.org/}HTWKV'],
+#                                                      destinationId=xml_payload['{http://tempuri.org/}00000']
+import json
+d = {'a':1, 'b':2}
+encoded_string = json.dumps(d).encode('utf-8')
+print(encoded_string, type(encoded_string))

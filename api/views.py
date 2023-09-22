@@ -21,6 +21,10 @@ from .producer import publish_message
 import jwt
 from abstractbaseuser_project.settings import SECRET_KEY as secret_key
 import base64
+# from zeep import Client
+# from zeep.transports import Transport
+import requests
+from django.conf import settings
 
 # Create your views here.
 class GetAllUsers(APIView):

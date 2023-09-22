@@ -255,12 +255,10 @@ class UserChattingWithFriendConsumer(AsyncWebsocketConsumer):
 ####################################################################################################################################
 class AgentChatbotUserChatting(AsyncWebsocketConsumer):
     async def connect(self):
-        print(self.scope['url_route']['kwargs']['session'], "----------===========self.scope['url_route']['kwargs']['session']")
         self.sender = self.scope['user'].first_name
         key = self.scope['url_route']['kwargs']['key']
         self.user_id = self.scope['url_route']['kwargs']['user_id']
         self.get_active_session_with_agent = await database_sync_to_async(self.get_active_session_of_user)(self.scope['url_route']['kwargs']['session'])
-        print(self.get_active_session_with_agent, '-----------self.get_active_session_with_agent---------------')
         if self.get_active_session_with_agent[1] is not None:
             self.talking_with_agent = True
             self.agent_name = self.get_active_session_with_agent[1]
@@ -281,12 +279,6 @@ class AgentChatbotUserChatting(AsyncWebsocketConsumer):
     def get_active_session_of_user(self, session_id):
         try:
             active_session = SessionIdStoreModel.objects.get(session_id=session_id)
-            # print(active_session, '----------------active session-----------------')
-            # if len(active_session)>1:
-            #     for i in range(len(active_session)-1):
-            #         active_session[i].is_resolved = True
-            #         active_session[i].save()
-            # active_session = SessionIdStoreModel.objects.filter(user_id=self.user_id, is_resolved=False)
             return (active_session.session_id, active_session.agent, active_session.id)
         except:
             return (None, None, None)
@@ -303,8 +295,6 @@ class AgentChatbotUserChatting(AsyncWebsocketConsumer):
         newMessage = f"{self.username_in_chatting[1]}:-{text_data}"
         if self.talking_with_agent == True:
             try:
-                # print(self.username_in_chatting[0], 'came here if self.talking_with_agent == True:vif self.talking_with_agent == True:if self.talking_with_agent == True:')
-                # save_chat = await database_sync_to_async(ChatStorageWithSessionIdModel.objects.create)(session_id=self.get_active_session_with_agent[2], user_input=newMessage, reply=f"Bot:- {chatbot_reply}")        
                 save_customer_conversation = await database_sync_to_async(ChatStorageWithSessionIdModel.objects.create)(session_id=self.session_foreign_key, user_input=f'{self.sender}: {text_data}')
                 await self.channel_layer.group_send(self.session_id,
                 {
