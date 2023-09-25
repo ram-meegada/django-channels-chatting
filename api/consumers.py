@@ -255,6 +255,7 @@ class UserChattingWithFriendConsumer(AsyncWebsocketConsumer):
 ####################################################################################################################################
 class AgentChatbotUserChatting(AsyncWebsocketConsumer):
     async def connect(self):
+        print('cam to connect websocket----------------')
         self.sender = self.scope['user'].first_name
         key = self.scope['url_route']['kwargs']['key']
         self.user_id = self.scope['url_route']['kwargs']['user_id']

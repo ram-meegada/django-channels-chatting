@@ -10,7 +10,7 @@ class CreateChatbotSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'email', 'username']
+        fields = ['id', 'email', 'username', 'first_name']
 
 # class ApiKeySerializer(serializers.ModelSerializer):
 #     class Meta:

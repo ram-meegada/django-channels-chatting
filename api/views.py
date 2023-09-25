@@ -25,6 +25,8 @@ import base64
 # from zeep.transports import Transport
 import requests
 from django.conf import settings
+from webpush import send_user_notification
+from django.shortcuts import get_object_or_404
 
 # Create your views here.
 class GetAllUsers(APIView):
@@ -283,7 +285,8 @@ class LoginUser2(TemplateView):
             print(user, user.role_of_user, user.id, '=============user=============--------------')
             login(request, user)
             if user.role_of_user == "2":
-                return HttpResponseRedirect(reverse('notification', args=[user.id]))
+                print(22222222222222222, user.id)
+                return HttpResponseRedirect(reverse('customer_all_chats', args=[user.id]))
             elif user.role_of_user == "3":
                 return HttpResponseRedirect(reverse('agentallcustomerchats'))
             elif user.role_of_user == "1":
@@ -370,19 +373,15 @@ class ChatWithChatbotAndAgentView(TemplateView):
     template_name = "notification.html"
     def get(self, request, user_id, session_id):
         print(request.user, '-------------request.user---------')
-        if not request.user.is_authenticated:
-            return HttpResponseRedirect(reverse('login2'))
-        # try:
-        #     get_session = SessionIdStoreModel.objects.filter(user_id=user_id, is_queued=False, is_resolved=False).exclude(agent_id=None)
-        #     get_session = get_session[0].session_id
-        # except:
-        #     get_session = None
-        profile_picture = request.user.profile_picture
-        print(profile_picture, '------------profile_pictureprofile_pictureprofile_picture-------------')
-        get_session_foreign_key = SessionIdStoreModel.objects.get(session_id=session_id)
-        get_chat_of_customer_session = ChatStorageWithSessionIdModel.objects.filter(session_id=get_session_foreign_key).values('user_input')
-        username_in_chatting = request.user.first_name
-        return render(request, self.template_name, locals())
+
+        if request.user.is_authenticated and (request.user.id == user_id or request.user.role_of_user == '3'):
+            profile_picture = request.user.profile_picture
+            print(profile_picture, '------------profile_pictureprofile_pictureprofile_picture-------------')
+            get_session_foreign_key = SessionIdStoreModel.objects.get(session_id=session_id)
+            get_chat_of_customer_session = ChatStorageWithSessionIdModel.objects.filter(session_id=get_session_foreign_key).values('user_input')
+            username_in_chatting = request.user.first_name
+            return render(request, self.template_name, locals())
+        return HttpResponseRedirect(reverse('login2'))
 
 class GetAllCustomerChatsView(TemplateView):
     template_name = "customerConversations.html"
@@ -390,5 +389,9 @@ class GetAllCustomerChatsView(TemplateView):
         if request.user.is_authenticated and request.user.role_of_user == '2':
             all_user_sessions = SessionIdStoreModel.objects.filter(user_id=user_id)[::-1]
             user = request.user.id
+            payload = {'head': request.user.email, 'body': 'your chats fetcheded successfully'}
+            user_obj = get_object_or_404(User, pk=request.user.id)
+            send_user_notification(user=user_obj, payload=payload, ttl=1000)
+            print('push notification is implemented-----------------+++++++++++++++')
             return render(request, self.template_name, locals())
         return HttpResponseRedirect(reverse('login2'))

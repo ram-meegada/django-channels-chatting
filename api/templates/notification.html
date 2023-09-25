@@ -7,7 +7,6 @@
 
 </head>
 <body id="body">
-    <img src="{{ profile_picture.url }}" alt="{{ username_in_chatting }}'s Profile Picture" style="width: 30px; height: 30px; border-radius: 50%;">
     <div class="chat-window">
         <h1>chat here {{ username_in_chatting }}</h1>
         {% for i in get_chat_of_customer_session %}
@@ -22,7 +21,7 @@
         var messagesDiv = document.getElementById('messages');
         var messageInput = document.getElementById('messageInput');
         var sendMessageButton = document.getElementById('sendMessageButton');
-        var wsUrl = 'wss://a8d1-122-160-196-233.ngrok-free.app/ws/agentuserchatting/{{ user_id }}/abc/{{ session_id }}/';
+        var wsUrl = 'ws://127.0.0.1:8000/ws/agentuserchatting/{{ user_id }}/abc/{{ session_id }}/';
         var ws = new WebSocket(wsUrl);
         
         ws.onopen = function() {
@@ -30,18 +29,11 @@
         };
 
         ws.onmessage = function(event) {
-            var profilePicture = document.createElement("img");
-            profilePicture.src = "{{ profile_picture.url }}"; 
-            profilePicture.alt = "{{ username_in_chatting }}'s Profile Picture";
-            profilePicture.style.width = "30px";
-            profilePicture.style.height = "30px";
-            profilePicture.style.borderRadius = "50%";
             if (event.data.includes(':chat_message')) {
                 appendMessage(event.data.slice(0,-13))
             }
             else{
                 var jsonData = JSON.parse(event.data);
-                document.getElementById('body').appendChild(profilePicture);
                 appendMessage('{{username_in_chatting}}' + ':-' + jsonData.customer);
                 appendMessage('Bot:- ' + jsonData.Bot);
             }

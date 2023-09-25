@@ -119,8 +119,8 @@ class SessionIdStoreModel(models.Model):
 
 class ChatStorageWithSessionIdModel(models.Model):
     session = models.ForeignKey(SessionIdStoreModel, on_delete=models.CASCADE)
-    user_input = models.TextField(default='')
-    # reply = models.TextField(default='')
+    user_input = models.TextField(default='', null=True, blank=True)
+    # reply = models.TextField(default='', null=True, blank=True)
     timestamp = models.DateTimeField(auto_now=True)
     def __str__(self):
         return self.session.session_id

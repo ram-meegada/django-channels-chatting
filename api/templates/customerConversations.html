@@ -11,5 +11,14 @@
         <a href="{% url 'notification' user_id i.session_id %}">{{ i }}</a> started_at:-{{ i.created_at }}<br><br>
     {% endfor %}
     <a href="{% url 'create_new_session' user %}">Start New Conversation</a>
+    <div>
+        <form id="send-push__form">
+            <h3 class="header">push notification</h3>
+            <p class="error"></p>
+            <input type="text" name="head" placeholder="Header: Your notification">
+            <textarea name="body" id="" cols="30" rows="10" placeholder="Body: Your flight has been cancelled 😱😱😱"></textarea>
+            <button>Send Me</button>
+        </form>
+    </div>
 </body>
 </html>

@@ -43,8 +43,11 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework.authtoken',
+
     'api',
     'order_app',
+
+    'webpush',
 ]
 
 MIDDLEWARE = [
@@ -207,3 +210,9 @@ RABBITMQ_PASSWORD = 'ram'
 import os
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+WEBPUSH_SETTINGS = {
+   "VAPID_PUBLIC_KEY": "BOxaYei1QlBslArXsZBavMXemGr8uMoaXXhjhog_neGAEKkpC5ULWluV_DMMXp4atym6MBF-46uXyPVbJErIibk",
+   "VAPID_PRIVATE_KEY": "41X7KM8MnG3EyCDMTd5A9t9kJP9Ye_eGydV5ZJdluAo",
+   "VAPID_ADMIN_EMAIL": "admin@email.com"
+}
