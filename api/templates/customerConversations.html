@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="push-notifications.js"></script>
     <title>Customer Conversations</title>
 </head>
 <body>
@@ -11,14 +12,18 @@
         <a href="{% url 'notification' user_id i.session_id %}">{{ i }}</a> started_at:-{{ i.created_at }}<br><br>
     {% endfor %}
     <a href="{% url 'create_new_session' user %}">Start New Conversation</a>
-    <div>
-        <form id="send-push__form">
-            <h3 class="header">push notification</h3>
-            <p class="error"></p>
-            <input type="text" name="head" placeholder="Header: Your notification">
-            <textarea name="body" id="" cols="30" rows="10" placeholder="Body: Your flight has been cancelled 😱😱😱"></textarea>
-            <button>Send Me</button>
-        </form>
-    </div>
+    
+    <script>
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.register('/service-worker.js')
+            .then((registration) => {
+              console.log('Service Worker registered with scope:', registration.scope);
+            })
+            .catch((error) => {
+              console.error('Service Worker registration failed:', error);
+            });
+        }
+    </script>
+    <script src="push-notifications.js"></script>
 </body>
 </html>

@@ -45,4 +45,5 @@ urlpatterns = [
     path('queued-session-chats/', GetAllQueuedChatsToAdminView.as_view(), name='queuedsession'),
     path('assign-agent-to-user-session/<str:session>/<str:user>/', AdminAssignAgentToUserSessionView.as_view(), name='assignagent'),
     path('agent/all-customer-chats/', AgentAllCustomerChatsView.as_view(), name="agentallcustomerchats"),
+    path('generate_pdf/', GeneratePDF.as_view(), name="generate_pdf"),
 ]

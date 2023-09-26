@@ -176,21 +176,23 @@ lst2 = [4,5]
 import base64
 
 def create_apikey():
-    api_key = base64.b64encode(str(random.randint(10000000000, 99999999999)).encode()).decode()
-    return api_key
-x = create_apikey()
+    api_keys = []
+    for i in range(2):
+        api_keys.append(base64.b64encode(str(random.randint(10000000000, 99999999999)).encode()).decode())
+    return api_keys
+# x = create_apikey()
+# print(x)
+# api_key_field = f'{create_apikey()}:{create_apikey()}'
+# production_key = api_key_field.split(':')[0]    
+# sandbox_key = api_key_field.split(':')[1]    
 
-api_key_field = f'{create_apikey()}:{create_apikey()}'
-production_key = api_key_field.split(':')[0]    
-sandbox_key = api_key_field.split(':')[1]    
-
-print('api_key_field',api_key_field,'\n', production_key, '\n',sandbox_key)    
+# print('api_key_field',api_key_field,'\n', production_key, '\n',sandbox_key)    
 # message=xml_payload['{http://tempuri.org/}msg1'],
 #                                                      messageType=xml_payload['{http://tempuri.org/}ERX001'],
 #                                                      conversationId=xml_payload['{http://tempuri.org/}2HTWKVQHXG5PR524D5'],
 #                                                      entityId=xml_payload['{http://tempuri.org/}HTWKV'],
 #                                                      destinationId=xml_payload['{http://tempuri.org/}00000']
-import json
-d = {'a':1, 'b':2}
-encoded_string = json.dumps(d).encode('utf-8')
-print(encoded_string, type(encoded_string))
+# import json
+# d = {'a':1, 'b':2}
+# encoded_string = json.dumps(d).encode('utf-8')
+# print(encoded_string, type(encoded_string))

@@ -27,6 +27,11 @@ import requests
 from django.conf import settings
 from webpush import send_user_notification
 from django.shortcuts import get_object_or_404
+from django.http import FileResponse
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+import json
+from io import BytesIO
 
 # Create your views here.
 class GetAllUsers(APIView):
@@ -395,3 +400,31 @@ class GetAllCustomerChatsView(TemplateView):
             print('push notification is implemented-----------------+++++++++++++++')
             return render(request, self.template_name, locals())
         return HttpResponseRedirect(reverse('login2'))
+
+
+class GeneratePDF(APIView):
+    def post(self, request):
+        json_data = request.data
+        # Create a PDF response
+        response = FileResponse(self.create_pdf(json_data))
+        response['Content-Type'] = 'application/pdf'
+        response['Content-Disposition'] = 'inline; filename="output.pdf"'
+        return response
+
+    def create_pdf(self, json_data):
+        # Create a PDF document
+        buffer = BytesIO()
+        c = canvas.Canvas(buffer, pagesize=letter)
+
+        # Load JSON data and draw it on the PDF
+        c.drawString(100, 750, "JSON Data:")
+        for key, value in json_data.items():
+            c.drawString(100, 750, f"{key}: {value}")
+
+        # Save the PDF
+        c.showPage()
+        c.save()
+
+        # Move the buffer's cursor to the beginning
+        buffer.seek(0)
+        return buffer
