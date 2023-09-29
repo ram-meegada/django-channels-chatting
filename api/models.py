@@ -138,3 +138,11 @@ class PermissionModel(models.Model):
 
 class SuperAdminAssignPermissionModel(models.Model):
     pass
+
+class ImgToPdfModel(models.Model):
+    image = models.FileField(upload_to='images/')
+
+    class Meta:
+        db_table = "imgtopdfmodel"
+    def __str__(self):
+        return self.image.name

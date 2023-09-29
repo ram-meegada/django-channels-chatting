@@ -45,5 +45,11 @@ urlpatterns = [
     path('queued-session-chats/', GetAllQueuedChatsToAdminView.as_view(), name='queuedsession'),
     path('assign-agent-to-user-session/<str:session>/<str:user>/', AdminAssignAgentToUserSessionView.as_view(), name='assignagent'),
     path('agent/all-customer-chats/', AgentAllCustomerChatsView.as_view(), name="agentallcustomerchats"),
+
+
     path('generate_pdf/', GeneratePDF.as_view(), name="generate_pdf"),
+    path('generate_pdf1/', PDFGenerateView.as_view(), name="generate_pdf1"),
+
+
+    path('send-mails/', SendMailsAsynchronouslyView.as_view(), name="send-mails"),
 ]

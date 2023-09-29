@@ -25,13 +25,13 @@ import base64
 # from zeep.transports import Transport
 import requests
 from django.conf import settings
-from webpush import send_user_notification
 from django.shortcuts import get_object_or_404
 from django.http import FileResponse
 from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
 import json
+import io
 from io import BytesIO
+from reportlab.pdfgen import canvas
 
 # Create your views here.
 class GetAllUsers(APIView):
@@ -428,3 +428,39 @@ class GeneratePDF(APIView):
         # Move the buffer's cursor to the beginning
         buffer.seek(0)
         return buffer
+
+class PDFGenerateView(APIView):
+    def post(self, request):
+        json_data = request.data
+        # Create a PDF response
+        # response = FileResponse(self.create_pdf(json_data))
+        # response['Content-Type'] = 'application/pdf'
+        # response['Content-Disposition'] = 'inline; filename="output.pdf"'
+        response = self.create_pdf(json_data)
+        return response
+    def create_pdf(self, json_data):
+        buffer = io.BytesIO()
+        p = canvas.Canvas(buffer)
+        y = 800
+        for i,j in json_data.items():
+            p.drawString(50, y, f"{i}:- {j}")
+            y -= 20
+        p.showPage()
+        p.save()
+        buffer.seek(0)
+        print(buffer, '-----------------buffer content---------------')
+        with open('new.pdf', 'wb') as file:
+            file.write(buffer.read())
+        return FileResponse(buffer, as_attachment=True)
+    
+from api.utils import send_html_mail   
+class SendMailsAsynchronouslyView(APIView):
+    def get(self, request):
+        try:
+            lst = ['ram9014@yopmail.com', 'kane9014@yopmail.com']    
+            send_html_mail('this is a subject', 'this is a testing mail', lst)
+            return Response({'data':None, 'message':'message sent successfully'})
+        except:
+            return Response({'data':None, 'message':'something went wrong'})
+        
+     
