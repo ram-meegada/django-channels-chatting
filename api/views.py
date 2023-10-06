@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from .models import User, ChatBotModel, QuestionAndAnswer, SaveChatOneToOneRoomModel, OneToOneChatRoomModel,\
-                    SessionIdStoreModel, ChatStorageWithSessionIdModel
+                    SessionIdStoreModel, ChatStorageWithSessionIdModel, ScidModel
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.views.generic import TemplateView
@@ -323,16 +323,22 @@ class LogoutAgentUser(TemplateView):
         logout(request)
         return render(request, 'logout.html')
     
+class GetAllUsersView(APIView):
+    def get(self, request):
+        all_users = User.objects.all().values('first_name', 'email')
+        return Response({'data': all_users, 'message':'all user details'})    
+    
 class GetAllQueuedChatsToAdminView(TemplateView):
     template_name = "all_queued_sessions.html"
     def get(self, request):
+        print(request.user.first_name, '---------------sdasdad--------------')
         if not request.user.is_authenticated:
             return HttpResponseRedirect(reverse('login2'))
         try:
             user = User.objects.get(email=request.user)
         except:
             return HttpResponse('NO USER FOUND==================')    
-        if user.is_superuser:
+        if user.role_of_user == '1':
             queued_sessions = SessionIdStoreModel.objects.filter(is_queued=True)
             all_agents = User.objects.filter(role_of_user='3')
             return render(request, self.template_name, locals())
@@ -381,7 +387,6 @@ class ChatWithChatbotAndAgentView(TemplateView):
 
         if request.user.is_authenticated and (request.user.id == user_id or request.user.role_of_user == '3'):
             profile_picture = request.user.profile_picture
-            print(profile_picture, '------------profile_pictureprofile_pictureprofile_picture-------------')
             get_session_foreign_key = SessionIdStoreModel.objects.get(session_id=session_id)
             get_chat_of_customer_session = ChatStorageWithSessionIdModel.objects.filter(session_id=get_session_foreign_key).values('user_input')
             username_in_chatting = request.user.first_name
@@ -396,62 +401,62 @@ class GetAllCustomerChatsView(TemplateView):
             user = request.user.id
             payload = {'head': request.user.email, 'body': 'your chats fetcheded successfully'}
             user_obj = get_object_or_404(User, pk=request.user.id)
-            send_user_notification(user=user_obj, payload=payload, ttl=1000)
+            # send_user_notification(user=user_obj, payload=payload, ttl=1000)
             print('push notification is implemented-----------------+++++++++++++++')
             return render(request, self.template_name, locals())
         return HttpResponseRedirect(reverse('login2'))
 
 
-class GeneratePDF(APIView):
-    def post(self, request):
-        json_data = request.data
-        # Create a PDF response
-        response = FileResponse(self.create_pdf(json_data))
-        response['Content-Type'] = 'application/pdf'
-        response['Content-Disposition'] = 'inline; filename="output.pdf"'
-        return response
+# class GeneratePDF(APIView):
+#     def post(self, request):
+#         json_data = request.data
+#         # Create a PDF response
+#         response = FileResponse(self.create_pdf(json_data))
+#         response['Content-Type'] = 'application/pdf'
+#         response['Content-Disposition'] = 'inline; filename="output.pdf"'
+#         return response
 
-    def create_pdf(self, json_data):
-        # Create a PDF document
-        buffer = BytesIO()
-        c = canvas.Canvas(buffer, pagesize=letter)
+#     def create_pdf(self, json_data):
+#         # Create a PDF document
+#         buffer = BytesIO()
+#         c = canvas.Canvas(buffer, pagesize=letter)
 
-        # Load JSON data and draw it on the PDF
-        c.drawString(100, 750, "JSON Data:")
-        for key, value in json_data.items():
-            c.drawString(100, 750, f"{key}: {value}")
+#         # Load JSON data and draw it on the PDF
+#         c.drawString(100, 750, "JSON Data:")
+#         for key, value in json_data.items():
+#             c.drawString(100, 750, f"{key}: {value}")
 
-        # Save the PDF
-        c.showPage()
-        c.save()
+#         # Save the PDF
+#         c.showPage()
+#         c.save()
 
-        # Move the buffer's cursor to the beginning
-        buffer.seek(0)
-        return buffer
+#         # Move the buffer's cursor to the beginning
+#         buffer.seek(0)
+#         return buffer
 
-class PDFGenerateView(APIView):
-    def post(self, request):
-        json_data = request.data
-        # Create a PDF response
-        # response = FileResponse(self.create_pdf(json_data))
-        # response['Content-Type'] = 'application/pdf'
-        # response['Content-Disposition'] = 'inline; filename="output.pdf"'
-        response = self.create_pdf(json_data)
-        return response
-    def create_pdf(self, json_data):
-        buffer = io.BytesIO()
-        p = canvas.Canvas(buffer)
-        y = 800
-        for i,j in json_data.items():
-            p.drawString(50, y, f"{i}:- {j}")
-            y -= 20
-        p.showPage()
-        p.save()
-        buffer.seek(0)
-        print(buffer, '-----------------buffer content---------------')
-        with open('new.pdf', 'wb') as file:
-            file.write(buffer.read())
-        return FileResponse(buffer, as_attachment=True)
+# class PDFGenerateView(APIView):
+#     def post(self, request):
+#         json_data = request.data
+#         # Create a PDF response
+#         # response = FileResponse(self.create_pdf(json_data))
+#         # response['Content-Type'] = 'application/pdf'
+#         # response['Content-Disposition'] = 'inline; filename="output.pdf"'
+#         response = self.create_pdf(json_data)
+#         return response
+#     def create_pdf(self, json_data):
+#         buffer = io.BytesIO()
+#         p = canvas.Canvas(buffer)
+#         y = 800
+#         for i,j in json_data.items():
+#             p.drawString(50, y, f"{i}:- {j}")
+#             y -= 20
+#         p.showPage()
+#         p.save()
+#         buffer.seek(0)
+#         print(buffer, '-----------------buffer content---------------')
+#         with open('new.pdf', 'wb') as file:
+#             file.write(buffer.read())
+#         return FileResponse(buffer, as_attachment=True)
     
 from api.utils import send_html_mail   
 class SendMailsAsynchronouslyView(APIView):
@@ -462,5 +467,8 @@ class SendMailsAsynchronouslyView(APIView):
             return Response({'data':None, 'message':'message sent successfully'})
         except:
             return Response({'data':None, 'message':'something went wrong'})
-        
-     
+
+class GeneratescidQrcode(APIView):
+    def post(self, request):
+        obj = ScidModel.objects.create(scid = request.data['scid'])
+        return Response({'data':'done'})

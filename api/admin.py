@@ -11,6 +11,7 @@ class ChatStorageWithSessionIdModelAdmin(admin.ModelAdmin):
 class SaveMessageModelAdmin(admin.ModelAdmin):
     list_display = ('room', 'user_message', 'sent_time')
 
+
 admin.site.register(ChatBotModel)
 # admin.site.register(OneToOneChatRoomModel)
 admin.site.register(User)

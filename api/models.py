@@ -2,6 +2,13 @@ from django.db import models
 from django.utils import timezone
 # Create your models here.
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, AbstractUser
+import qrcode, random
+from PIL import Image, ImageDraw
+from io import BytesIO
+from django.core.files import File
+import pyqrcode
+import png
+from pyqrcode import QRCode
 
 # class UserManager(BaseUserManager):
 #     def create_user(self, email, password=None, **extra_fields):
@@ -37,7 +44,7 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Abstra
     # REQUIRED_FIELDS = ['username']
 
 
-USER_ROLE_CHOICES = [('1', 'admin'), ('2', 'customer'), ('3', 'agent'), ('4', 'None')]
+USER_ROLE_CHOICES = [('1', 'admin'), ('2', 'customer'), ('3', 'agent'), ('4', 'None'), ('5', 'client')]
 class User(AbstractUser):
     username = models.CharField(max_length=255,blank=True, null=True)
     first_name = models.CharField(max_length=255,blank=True, null=True)
@@ -54,11 +61,6 @@ class User(AbstractUser):
     #         models.Index(fields=['id'])
     #     ]
 
-class ChatBotModel(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
-    bot_name=models.CharField(max_length=254, null=True, blank=True)
-    api_key=models.CharField(max_length=222, blank=True, null=True)
-    data_set = models.FileField()
 
 class QuestionAndAnswer(models.Model):
     user_id = models.ForeignKey(User, on_delete=models.CASCADE) 
@@ -107,7 +109,19 @@ class SaveChatOneToOneRoomModel(models.Model):
 #         db_name='product_microservice'
 #     )
 
+class ChatBotModel(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    bot_name = models.CharField(max_length=254, null=True, blank=True)
+    test_api_key = models.CharField(max_length=222, blank=True, null=True)
+    production_api_key = models.CharField(max_length=222, blank=True, null=True)
+    data_set = models.FileField()
+
+    def __str__(self):
+        return self.user.email
+
+
 class SessionIdStoreModel(models.Model):
+    chatbot = models.ForeignKey(ChatBotModel, on_delete=models.CASCADE, null=True, blank=True)
     session_id = models.CharField(max_length=255)
     agent = models.ForeignKey(User, on_delete=models.DO_NOTHING, null=True, blank=True, related_name='chatting_agent')
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='chatting_user')
@@ -146,3 +160,21 @@ class ImgToPdfModel(models.Model):
         db_table = "imgtopdfmodel"
     def __str__(self):
         return self.image.name
+
+
+class ScidModel(models.Model):
+    scid = models.CharField(null=True, blank=True)
+    qr_code = models.ImageField(upload_to="qr_codes/", null=True, blank=True)
+    def save(self,*args,**kwargs):
+        # url = f'http://127.0.0.1:8000/qrcode/{self.product_name}/'
+        url=f'{self.scid}'
+        # lst = [self.product_name, self.cost, self.sale_price]
+        qrcode_img=qrcode.make(url)
+        canvas=Image.new("RGB", (300,300),"white")
+        draw=ImageDraw.Draw(canvas)
+        canvas.paste(qrcode_img)
+        buffer=BytesIO()
+        canvas.save(buffer,"PNG")
+        self.qr_code.save(f'image{random.randint(0,9999)}.png',File(buffer),save=False)
+        canvas.close()
+        super(ScidModel, self).save(*args,**kwargs)

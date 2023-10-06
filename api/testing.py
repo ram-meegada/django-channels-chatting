@@ -196,3 +196,7 @@ def create_apikey():
 # d = {'a':1, 'b':2}
 # encoded_string = json.dumps(d).encode('utf-8')
 # print(encoded_string, type(encoded_string))
+
+s = "1.00"
+# print(s.split('.')[0])
+print(int(float(s))) 

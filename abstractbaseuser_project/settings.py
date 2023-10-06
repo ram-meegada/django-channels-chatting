@@ -26,8 +26,9 @@ SECRET_KEY = 'django-insecure-2-!yajfk=q*le&@fi+*^741ykk@1@8h(n45swamf$fu9ts4s*3
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
+
 CSRF_TRUSTED_ORIGINS = [
-    'https://a8d1-122-160-196-233.ngrok-free.app',  
+    'https://b36e-112-196-43-19.ngrok-free.app',  
 ]
 
 # Application definition
@@ -105,7 +106,7 @@ DATABASES = {
 }
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=10),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=120),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=10)
 }
 
@@ -148,7 +149,7 @@ REST_FRAMEWORK = {
     ]
 }
 
-# Internationalization
+# Internationalizationuser/create-new-session/
 # https://docs.djangoproject.com/en/4.1/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
@@ -184,7 +185,7 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("127.0.0.1", 6379)],
+            "hosts": [("127.0.0.1", 6380)],
         },
     },
 }
