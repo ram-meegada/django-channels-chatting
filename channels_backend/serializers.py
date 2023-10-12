@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from api.models import SessionIdStoreModel
+from api.models import SessionIdStoreModel, ChatStorageWithSessionIdModel
 
 
 class GetAllUserSessionsSerializer(serializers.ModelSerializer):
@@ -32,6 +32,19 @@ class GetAllQueuedSessionsSerializer(serializers.ModelSerializer):
             return None    
     def get_user(self, obj):
         try:
-            return obj.user.email
+            return obj.user.first_name
         except:
             return None    
+        
+
+class ChatStorageSerializer(serializers.ModelSerializer):
+    user = serializers.SerializerMethodField()
+    class Meta:
+        model = ChatStorageWithSessionIdModel
+        fields = ['user', 'user_input', 'timestamp']
+    def get_user(self, obj):
+        try:
+            user_name = obj.user.first_name
+            return user_name
+        except:
+            return None

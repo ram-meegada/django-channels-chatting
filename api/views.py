@@ -472,3 +472,7 @@ class GeneratescidQrcode(APIView):
     def post(self, request):
         obj = ScidModel.objects.create(scid = request.data['scid'])
         return Response({'data':'done'})
+    
+class TestingPurposeView(APIView):
+    def get(self, request):
+        return Response({"data":"hi hello"})

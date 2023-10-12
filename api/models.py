@@ -7,7 +7,7 @@ from PIL import Image, ImageDraw
 from io import BytesIO
 from django.core.files import File
 import pyqrcode
-import png
+import png, os
 from pyqrcode import QRCode
 
 # class UserManager(BaseUserManager):
@@ -126,6 +126,7 @@ class SessionIdStoreModel(models.Model):
     agent = models.ForeignKey(User, on_delete=models.DO_NOTHING, null=True, blank=True, related_name='chatting_agent')
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='chatting_user')
     is_queued = models.BooleanField(default=False)
+    is_assigned = models.BooleanField(default=False)
     is_resolved = models.BooleanField(default=False)
     created_at = models.DateTimeField(default=timezone.now)
     def __str__(self):
@@ -133,6 +134,7 @@ class SessionIdStoreModel(models.Model):
 
 class ChatStorageWithSessionIdModel(models.Model):
     session = models.ForeignKey(SessionIdStoreModel, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
     user_input = models.TextField(default='', null=True, blank=True)
     # reply = models.TextField(default='', null=True, blank=True)
     timestamp = models.DateTimeField(auto_now=True)
@@ -154,7 +156,16 @@ class SuperAdminAssignPermissionModel(models.Model):
     pass
 
 class ImgToPdfModel(models.Model):
-    image = models.FileField(upload_to='images/')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    image = models.ImageField(upload_to='images/')
+    pdf_file = models.FileField(upload_to='pdfs/', null=True, blank=True)
+    def save(self,*args,**kwargs):
+        img = Image.open(self.image)
+        pdf_buffer = BytesIO()
+        img.save(pdf_buffer, format='PDF')
+        self.pdf_file.save(f"{self.image.name.split('.')[-2]}.pdf", File(pdf_buffer), save=False)
+        print(self.pdf_file.url, '--------------self.pdf_file.url----------------')
+        super(ImgToPdfModel, self).save(*args, **kwargs)
 
     class Meta:
         db_table = "imgtopdfmodel"

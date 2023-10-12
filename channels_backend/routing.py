@@ -4,4 +4,5 @@ from .consumers import *
 
 websocket_urlpatterns = [
     path('ws/agentuserchatting/<int:user_id>/<str:session>/', AgentChatbotUserChatting.as_asgi()),
+    path('ws/openaiagentuser/<int:user_id>/<str:session>/', UserChattingWithOpenAIAgent.as_asgi()),
 ]

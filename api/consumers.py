@@ -3,7 +3,7 @@ from channels.exceptions import StopConsumer
 from time import sleep
 from datetime import datetime
 import asyncio, json
-from .utils import train_data, chatbot_func
+# from .utils import train_data, chatbot_func
 from .models import ChatBotModel
 from channels.db import database_sync_to_async
 from asgiref.sync import async_to_sync
