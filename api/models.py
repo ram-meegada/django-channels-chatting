@@ -52,6 +52,8 @@ class User(AbstractUser):
     email = models.EmailField(unique=True, max_length=255, null=True, blank=True)
     password = models.CharField(max_length=255, null=True, blank=True)
     role_of_user = models.CharField(choices=USER_ROLE_CHOICES, default='4', max_length=100)
+    bot_subscription = models.IntegerField(blank=True, null=True, help_text="1.six months, 2.one year, 3.two years")
+    trail_period = models.IntegerField(blank=True, null=True, help_text="1.six months, 2.one year, 3.two years")
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']

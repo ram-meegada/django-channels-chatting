@@ -66,17 +66,21 @@ class ChatWithChatbotAndAgentView(APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request, session_id):
         obj = SessionIdStoreModel.objects.filter(session_id = session_id)[0]
+        print(obj, request.user.bot_subscription, request.user.trail_period, '==================obj----------------------')
         if obj.agent is None: agent = 0 
         else: agent = obj.agent.id
         if obj.user_id == request.user.id or request.user.id == agent:
             get_session_foreign_key = SessionIdStoreModel.objects.get(session_id=session_id)
             get_chat_of_customer_session = ChatStorageWithSessionIdModel.objects.filter(session_id=get_session_foreign_key).values('user_input')
             username_in_chatting = request.user.first_name
-            # apikey = (obj.chatbot.production_api_key).split('prod_')[1]
+            print(obj.chatbot.user.bot_subscription, '================---------------')
+            if obj.chatbot.user.bot_subscription is not None:
+                websocket_url = f"ws://127.0.0.1:8000/ws/openaiagentuser/{ request.user.id }/{ session_id }/"
+            else:
+                websocket_url = f"ws://127.0.0.1:8000/ws/basicbot-agent-user/{ request.user.id }/{ session_id }/"    
             return Response({
-                'websocket_url':f"ws://127.0.0.1:8000/ws/openaiagentuser/{ request.user.id }/{ session_id }/",
+                'websocket_url':websocket_url,
                 'username_in_chatting': f'{username_in_chatting}',
-                'previous_chat_of_customer_session': f'{get_chat_of_customer_session}'
                 })
         return Response({'data':None, 'message':'something went wrong'})
 
@@ -88,11 +92,6 @@ class GetAllCustomerChatsView(APIView):
             all_user_sessions = SessionIdStoreModel.objects.filter(user_id=request.user.id).order_by('-created_at')
             print(all_user_sessions, '---------------------allusersessions----------------')
             serializer = GetAllUserSessionsSerializer(all_user_sessions, many=True)
-            # user = request.user.id
-            # payload = {'head': request.user.email, 'body': 'your chats fetcheded successfully'}
-            # user_obj = get_object_or_404(User, pk=request.user.id)
-            # send_user_notification(user=user_obj, payload=payload, ttl=1000)
-            # print('push notification is implemented-----------------+++++++++++++++')
             return Response({'data':serializer.data, 'message':'successfuly', 'status':status.HTTP_200_OK})
         return Response({'data':None, 'message':'NO ACCESS', 'status':status.HTTP_403_FORBIDDEN})
 
@@ -103,6 +102,7 @@ class GetAllUsersView(APIView):
     
 class LoginUser(APIView):
     def post(self, request):
+        print(44444444444444444444)
         email = request.data['email']
         password= request.data['password']
         try:

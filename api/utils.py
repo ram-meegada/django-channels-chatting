@@ -182,7 +182,7 @@ from .models import User
 import openai
 
 
-openai.api_key = "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"
+openai.api_key = "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"
 def open_ai_chat(input_text):
     if input_text:
         messages = [{"role": "system", "content": input_text}]
