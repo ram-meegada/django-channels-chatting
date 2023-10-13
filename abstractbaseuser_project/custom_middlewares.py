@@ -1,15 +1,15 @@
-
+from datetime import datetime
 
 
 class CustomHeaderMiddleware:
     def __init__(self, get_response):
-        # print(1111111111111111111111111)
         self.get_response = get_response
 
     def __call__(self, request):
-        # print(2222222222222222222222)
+        print(request.META['REMOTE_ADDR'], '-------------------')
+        start_time = datetime.now()
         response = self.get_response(request)
-        # print(33333333333333333)
-        
-        # print(response, type(response), '----------------response-----------------')
+        end_time = datetime.now()
+        elapsed_time = end_time-start_time
+        response["time taken"] = str(elapsed_time)
         return response

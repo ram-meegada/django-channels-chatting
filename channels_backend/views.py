@@ -97,6 +97,7 @@ class GetAllCustomerChatsView(APIView):
 
 class GetAllUsersView(APIView):
     def get(self, request):
+        print(33333333333333333333333)
         all_users = User.objects.all().values('id', 'first_name', 'email')
         return Response({'data': all_users, 'message':'all user details'}) 
     
@@ -123,6 +124,6 @@ class DisplayPreviousChatsView(APIView):
     def get(self, request, session):
         session_id = get_object_or_404(SessionIdStoreModel, session_id=session)
         print(session_id, '----------------session------------')
-        all_chats = ChatStorageWithSessionIdModel.objects.all().order_by('timestamp')
+        all_chats = ChatStorageWithSessionIdModel.objects.filter(session_id=session_id).order_by('timestamp')
         serializer = ChatStorageSerializer(all_chats, many=True)
         return Response({"data":serializer.data,'message':"all chats of this session"})

@@ -121,7 +121,7 @@ class AgentChatbotUserChatting(AsyncWebsocketConsumer):
 
 class UserChattingWithOpenAIAgent(AsyncWebsocketConsumer):
     async def connect(self):
-        print('cam to connect websocket----------------')
+        print('------------------ welcome to open AI chatbot ----------------')
         # self.sender = self.scope['user'].first_name
         # print(self.sender, '==================')
         # key = self.scope['url_route']['kwargs']['key']
@@ -148,9 +148,9 @@ class UserChattingWithOpenAIAgent(AsyncWebsocketConsumer):
     def get_active_session_of_user(self, session_id):
         try:
             active_session = SessionIdStoreModel.objects.get(session_id=session_id)
-            return (active_session.session_id, active_session.agent, active_session.id)
+            return [active_session.session_id, active_session.agent, active_session.id]
         except:
-            return (None, None, None)
+            return [None, None, None]
 
     def get_data_set(self, session_id):
         try:
@@ -184,14 +184,17 @@ class UserChattingWithOpenAIAgent(AsyncWebsocketConsumer):
                 )
 
         elif newMessage["input_text"] != "talk to human" and self.get_active_session_with_agent[1] is None:
-            print('2222222222222222222222222222222222')
-            chatbot_reply = open_ai_chat(newMessage["input_text"])
+            print(newMessage.get("input_response") ,'2222222222222222222222222222222222')
+            if not newMessage.get("input_response"):
+                chatbot_reply = open_ai_chat(newMessage["input_text"])
+            elif newMessage.get("input_response"):
+                chatbot_reply = newMessage.get("input_response")    
             chatbot_user_conversation = {}
             chatbot_user_conversation['customer'] = newMessage["input_text"]
-            chatbot_user_conversation['Bot'] = newMessage["input_response"]
+            chatbot_user_conversation['Bot'] = chatbot_reply
             await self.send(text_data=f"Bot:-{chatbot_reply}")
             save_chat_customer = await database_sync_to_async(ChatStorageWithSessionIdModel.objects.create)(session_id=self.session_foreign_key, user_id=self.user_id, user_input=newMessage["input_text"])
-            save_chat_bot = await database_sync_to_async(ChatStorageWithSessionIdModel.objects.create)(session_id=self.session_foreign_key, user_input=f"Bot:- {newMessage['input_response']}")
+            save_chat_bot = await database_sync_to_async(ChatStorageWithSessionIdModel.objects.create)(session_id=self.session_foreign_key, user_input=f"Bot:- {chatbot_reply}")
         if newMessage["input_text"] == "talk to human" and self.get_active_session_with_agent[1] is None:
             print(33333333333333333333333333333333333)
             self.talking_with_agent = True
@@ -231,7 +234,7 @@ class UserChattingWithOpenAIAgent(AsyncWebsocketConsumer):
 
 class UserChattingWithBasicBotAgent(AsyncWebsocketConsumer):
     async def connect(self):
-        print('cam to connect websocket----------------')
+        print('-------------- welcome to basic chatbot ----------------')
         self.session_id = self.scope['url_route']['kwargs']['session']
         self.user_id = self.scope['url_route']['kwargs']['user_id']
         self.username_in_chatting = await database_sync_to_async(self.get_username_in_chatting)(self.user_id)
