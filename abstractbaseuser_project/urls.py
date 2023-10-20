@@ -24,6 +24,9 @@ urlpatterns = [
     path('pdf/', include("imagetopdf.urls")),
     path('channels/', include("channels_backend.urls")),
     path('file/', include("filetomail.urls")),
+    path('stripe/', include('stripe_app.urls')),
+    path('accounts/', include('allauth.urls')),
+    path('social/', include('allauth.socialaccount.urls')),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

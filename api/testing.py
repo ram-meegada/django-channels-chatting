@@ -197,6 +197,20 @@ def create_apikey():
 # encoded_string = json.dumps(d).encode('utf-8')
 # print(encoded_string, type(encoded_string))
 
-s = "1.00"
+# s = "1.00"
 # print(s.split('.')[0])
-print(int(float(s))) 
+# print(int(float(s))) 
+# import numpy as np
+
+# arr_2d = np.array([
+#     [1, 2, 3], 
+#     [4, 5, 6], 
+#     [7, 8, 9]]
+#     )
+# max_axis_0 = np.max(arr_2d, axis=0)  # Maximum along columns
+# max_axis_1 = np.max(arr_2d, axis=1)  # Maximum along rows
+
+# print(max_axis_0)
+# print(max_axis_1)
+
+# print(bin(12))

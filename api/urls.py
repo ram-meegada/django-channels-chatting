@@ -36,6 +36,8 @@ urlpatterns = [
 
 
     path('registration/', RegistrationApi.as_view(), name='registration'),
+    path('google/', GoogleSocialAuthView.as_view()),
+    path('social-signup/', SocialSignupAPIView.as_view(), name='social-signup'),
     path('user/create-new-session/<int:user_id>/', CreateNewSessionForUserView.as_view(), name='create_new_session'),
     path('user/all-chat-sessions/<int:user_id>/', GetAllCustomerChatsView.as_view(), name='customer_all_chats'),
     path('login2/', LoginUser2.as_view(), name='login2'),
@@ -53,4 +55,6 @@ urlpatterns = [
 
     path('send-mails/', SendMailsAsynchronouslyView.as_view(), name="send-mails"),
     path('generate-qr/', GeneratescidQrcode.as_view(), name="send-msafds"),
+
+    path('push-notification/', CheckPushNotificationView.as_view(), name="checkpushnotificationview" )
 ]

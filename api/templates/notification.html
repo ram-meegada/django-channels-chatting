@@ -23,7 +23,7 @@
         var messageInput = document.getElementById('messageInput');
         var sendMessageButton = document.getElementById('sendMessageButton');
         // var wsUrl = 'wss://b36e-112-196-43-19.ngrok-free.app/ws/agentuserchatting/{{ user_id }}/abc/{{ session_id }}/';
-        var wsUrl = 'ws://127.0.0.1:8000/ws/agentuserchatting/{{ user_id }}/abc/{{ session_id }}/';
+        var wsUrl = 'wss://56fa-112-196-43-19.ngrok-free.app/ws/openaiagentuser/{{ user_id }}/{{ session_id }}/';
         var ws = new WebSocket(wsUrl);
         
         ws.onopen = function() {

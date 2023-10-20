@@ -45,6 +45,8 @@ from pyqrcode import QRCode
 
 
 USER_ROLE_CHOICES = [('1', 'admin'), ('2', 'customer'), ('3', 'agent'), ('4', 'None'), ('5', 'client')]
+AUTH_PROVIDERS = {'facebook': 'facebook', 'google': 'google',
+                  'twitter': 'twitter', 'email': 'email'}
 class User(AbstractUser):
     username = models.CharField(max_length=255,blank=True, null=True)
     first_name = models.CharField(max_length=255,blank=True, null=True)
@@ -54,6 +56,9 @@ class User(AbstractUser):
     role_of_user = models.CharField(choices=USER_ROLE_CHOICES, default='4', max_length=100)
     bot_subscription = models.IntegerField(blank=True, null=True, help_text="1.six months, 2.one year, 3.two years")
     trail_period = models.IntegerField(blank=True, null=True, help_text="1.six months, 2.one year, 3.two years")
+    auth_provider = models.CharField(
+        max_length=255, blank=False,
+        null=False, default=AUTH_PROVIDERS.get('email'))
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']

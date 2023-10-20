@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
+from firebase_admin import initialize_app
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -28,7 +29,7 @@ DEBUG = True
 ALLOWED_HOSTS = ['*']
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://b36e-112-196-43-19.ngrok-free.app',  
+    'https://56fa-112-196-43-19.ngrok-free.app',  
 ]
 
 # Application definition
@@ -48,6 +49,13 @@ INSTALLED_APPS = [
     'api',
     'filetomail',
     'imagetopdf',
+    'stripe_app.apps.StripeAppConfig',
+
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
+    'rest_framework_social_oauth2',
 
 ]
 
@@ -60,6 +68,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'abstractbaseuser_project.custom_middlewares.CustomHeaderMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
 ]
 
 ROOT_URLCONF = 'abstractbaseuser_project.urls'
@@ -142,6 +151,8 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.BasicAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'allauth.account.auth_backends.AuthenticationBackend',
+        'rest_framework_social_oauth2.authentication.SocialAuthentication',
     ],
     
     # Permission settings
@@ -218,3 +229,12 @@ WEBPUSH_SETTINGS = {
    "VAPID_PRIVATE_KEY": "wa1S66DDFxZy5rJARPy4To8gEhRPASsIE2UQ06zu6Gk",
    "VAPID_ADMIN_EMAIL": "admin@gmail.com"
 }
+
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = '714028301160-4882j53g0i9lh0jfndqpj7f1l42hdp3q.apps.googleusercontent.com'
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = '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'
+
+FIREBASE_APP = initialize_app()
+ 
+
+STRIPE_PUBLIC_KEY = 'pk_test_51O2SLGSImlUdVW6uAsaqe3ISwdDxzdbzQrHKHddeEvDaZJj71OlFCSFAvwuw0GTiJZGOgdkm3T2AjsXyyzssjXsA00jOg8wWT5'
+STRIPE_SECRET_KEY = 'sk_test_51O2SLGSImlUdVW6uwpqy0AbiPHY2cU06bdFQdyETYZio9LhCv8TOC6LYW3xQ86nz46D27Xt4RRPXeeGB2euJ7vR8006HofI1U4'

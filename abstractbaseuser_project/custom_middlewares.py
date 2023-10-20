@@ -6,7 +6,7 @@ class CustomHeaderMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        print(request.META['REMOTE_ADDR'], '-------------------')
+        print(request.META['REMOTE_ADDR'], '------------middleware-------')
         start_time = datetime.now()
         response = self.get_response(request)
         end_time = datetime.now()

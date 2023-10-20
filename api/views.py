@@ -32,6 +32,11 @@ import json
 import io
 from io import BytesIO
 from reportlab.pdfgen import canvas
+from rest_framework.generics import GenericAPIView
+from .serializers import GoogleSocialAuthSerializer
+from firebase_admin.messaging import Message, Notification
+from pyfcm import FCMNotification
+
 
 # Create your views here.
 class GetAllUsers(APIView):
@@ -148,10 +153,6 @@ class DeleteQuestionsByUser(APIView):
             user_obj.save()
         return Response({"data":None, "message":"deleted succesfully"})
     
-    
-        
-    
-    
 
 class CheckingView(APIView):
     permission_classes = [IsAuthenticated]
@@ -216,6 +217,44 @@ class RegistrationApi(APIView):
             # publish_message('user_created', request.data)
             return Response({'data':serializer.data})
         return Response({"data":serializer.errors})
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from allauth.socialaccount.models import SocialAccount
+from .serializers import UserSerializer  # Import your UserSerializer
+
+class SocialSignupAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+    def post(self, request):
+        # Get the social account associated with the user
+        social_account = SocialAccount.objects.filter(user=request.user).first()
+
+        if social_account:
+            # Extract information from the social account
+            email = social_account.extra_data.get('email')
+            username = social_account.extra_data.get('username')
+
+            # Check if the user with this email already exists
+            existing_user = User.objects.filter(email=email).first()
+
+            if existing_user:
+                # Log in the existing user (you may need to import login function)
+                login(request, existing_user)
+                return Response({'data': UserSerializer(existing_user).data})
+            else:
+                # Create a new user
+                new_user = User.objects.create_user(
+                    email=email,
+                    username=username,
+                    # You can customize this based on the data you get from the social provider
+                )
+
+                # Log in the new user
+                login(request, new_user)
+                return Response({'data': UserSerializer(new_user).data})
+        else:
+            return Response({'error': 'No social account found'}, status=400)
+
 
 class UpdateUserAPI(APIView):
     permission_classes = [IsAuthenticated]
@@ -476,3 +515,35 @@ class GeneratescidQrcode(APIView):
 class TestingPurposeView(APIView):
     def get(self, request):
         return Response({"data":"hi hello"})
+    
+
+class GoogleSocialAuthView(GenericAPIView):
+
+    serializer_class = GoogleSocialAuthSerializer
+
+    def post(self, request):
+        """
+
+        POST with "auth_token"
+
+        Send an idtoken as from google to get user information
+
+        """
+
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = ((serializer.validated_data)['auth_token'])
+        return Response(data, status=status.HTTP_200_OK)
+    
+
+
+class CheckPushNotificationView(APIView):
+    def post(self, request):
+        push_service = FCMNotification(api_key="AAAAsxujhoE:APA91bGgl9ncVQfQB6uNOhgnxDY-mFCeVLSv4BgSBLhxiNeHL2TFykIzl0N44O68uOIC-rxL1ni7oVAK3j3hAUXXXzf-Hn6E40byMG2f1mNXzm-3WVp3t0ZDNXLZvOfcfCMO4wAG4NrR")
+        # Send the notification
+        result = push_service.notify_single_device(
+        registration_id="eCkTC4H_98sD0Txbj6xYM_:APA91bHjphGRD8utcfE0es83yfYyvRhyyxEszW1ddO9c9khKQp1wOSFqiihioBxh3ueSwlUeXCR9kccZT6FScA0pKSRny9IIEVe4u9dVHV-FcGQoiftkqw1_PXO0UbSgKFXYefpxyVZ1",
+        message_title="message title",
+        message_body="once come here!!!!!!!!!!!!!!",
+        )
+        return Response({"data":"done"})
