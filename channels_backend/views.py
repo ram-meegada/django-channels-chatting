@@ -27,6 +27,8 @@ class GetAllQueuedChatsToAdminView(APIView):
 class AdminAssignAgentToUserSessionView(APIView):
     permission_classes = [IsAuthenticated]
     def put(self, request, session):
+        if request.data.get('agent_id') is None or request.data.get('agent_id') == "":
+            return Response({'data':None, 'message':'no agent selected', 'status': status.HTTP_400_BAD_REQUEST})    
         if request.user.role_of_user == '1':
             get_session = SessionIdStoreModel.objects.get(session_id=session)
             get_session.agent_id = request.data.get('agent_id')
@@ -87,7 +89,6 @@ class ChatWithChatbotAndAgentView(APIView):
 class GetAllCustomerChatsView(APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request):
-        print(request.user, '======================resquest.user================')
         if request.user.role_of_user == '2':
             all_user_sessions = SessionIdStoreModel.objects.filter(user_id=request.user.id).order_by('-created_at')
             print(all_user_sessions, '---------------------allusersessions----------------')

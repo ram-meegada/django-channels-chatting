@@ -169,10 +169,10 @@ class UserChattingWithOpenAIAgent(AsyncWebsocketConsumer):
         talking_with_whom = await database_sync_to_async(self.get_talking_to_whom)(self.session_id)
         # print(talking_with_whom, '=============talking_with_whomtalking_with_whom=========')
         if talking_with_whom[0] == True:
-            self.get_active_session_with_agent[1] = talking_with_whom[1] 
+            self.get_active_session_with_agent[1] = talking_with_whom[1]
         else:
             self.get_active_session_with_agent[1] = None
-        print(self.get_active_session_with_agent, '--------------------self.talking_with_agent == True-----------')    
+        print(self.get_active_session_with_agent, '--------------------self.talking_with_agent == True-----------')
         if self.get_active_session_with_agent[1] is not None:
             print('1111111111111111111111111111111-----------===========')
             save_customer_conversation = await database_sync_to_async(ChatStorageWithSessionIdModel.objects.create)(session_id=self.session_foreign_key, user_id=self.user_id, user_input=newMessage["input_text"])
@@ -266,6 +266,9 @@ class UserChattingWithBasicBotAgent(AsyncWebsocketConsumer):
         
     async def receive(self, text_data):
         newMessage = json.loads(text_data)
+        with open(f'{text_data["input_text"]}' , 'r', encoding="utf-8") as file:
+            file.read()
+        print('--------------- done ------------------')    
         talking_with_whom = await database_sync_to_async(self.get_talking_to_whom)(self.session_id)
         # print(talking_with_whom, '=============talking_with_whomtalking_with_whom=========')
         if talking_with_whom[0] == True:
@@ -325,4 +328,4 @@ class UserChattingWithBasicBotAgent(AsyncWebsocketConsumer):
             return (0, 'Not there')
 
     async def disconnect(self, close_code):
-        print('websocket disconnected.....', close_code)     
+        print('websocket disconnected.....', close_code)

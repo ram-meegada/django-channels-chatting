@@ -423,7 +423,6 @@ class ChatWithChatbotAndAgentView(TemplateView):
     template_name = "notification.html"
     def get(self, request, user_id, session_id):
         print(request.user, '-------------request.user---------')
-
         if request.user.is_authenticated and (request.user.id == user_id or request.user.role_of_user == '3'):
             profile_picture = request.user.profile_picture
             get_session_foreign_key = SessionIdStoreModel.objects.get(session_id=session_id)

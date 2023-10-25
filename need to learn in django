@@ -1,15 +1,16 @@
 DSA in python
 **docker
+photos, vidoes upload in channels
 kubenetes
 make website available to only selected connection
 learn aws basics
 learn about custom middleware in (channels and drf)
 Caching
 working with multiple databases in django
-photos, vidoes upload in channels
 stripe payment gateway
 javascript
 can we delete records after specific time automatically in django :- yes with celery but manually also
 send pdf, image, docs through email automation in django :- done
 apps like music player, (file conversions:-done)
 push notification implementation(done)
+real-time data using channels

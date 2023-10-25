@@ -92,7 +92,7 @@ TEMPLATES = [
 ASGI_APPLICATION = 'abstractbaseuser_project.asgi.application'
 # WSGI_APPLICATION = 'abstractbaseuser_project.wsgi.application'
 
-
+# SESSION_COOKIE_AGE = 30
 
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases

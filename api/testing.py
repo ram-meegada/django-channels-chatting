@@ -214,3 +214,64 @@ def create_apikey():
 # print(max_axis_1)
 
 # print(bin(12))
+data = [
+        {
+            "id": 39,
+            "day": "TUESDAY",
+            "start_time": "00:00:00",
+            "end_time": "00:00:00",
+            "of_company": 3,
+            "company": "laptop"
+        },
+        {
+            "id": 40,
+            "day": "WEDNESDAY",
+            "start_time": "19:00:00",
+            "end_time": "00:00:00",
+            "of_company": 3,
+            "company": "laptop"
+        },
+        {
+            "id": 41,
+            "day": "THURSDAY",
+            "start_time": "18:00:00",
+            "end_time": "00:00:00",
+            "of_company": 3,
+            "company": "laptop"
+        },
+        {
+            "id": 42,
+            "day": "FRIDAY",
+            "start_time": "18:00:00",
+            "end_time": "00:00:00",
+            "of_company": 3,
+            "company": "laptop"
+        },
+        {
+            "id": 43,
+            "day": "SATURDAY",
+            "start_time": "18:00:00",
+            "end_time": "00:00:00",
+            "of_company": 3,
+            "company": "laptop"
+        },
+        {
+            "id": 44,
+            "day": "SUNDAY",
+            "start_time": "20:00:00",
+            "end_time": "00:00:00",
+            "of_company": 3,
+            "company": "laptop"
+        },
+        {
+            "id": 38,
+            "day": "MONDAY",
+            "start_time": "00:00:00",
+            "end_time": "09:00:00",
+            "of_company": 3,
+            "company": "laptop"
+        }
+    ]
+records = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"]
+data.sort(key=lambda v:records.index(v["day"]))
+print(data)
