@@ -28,9 +28,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
-CSRF_TRUSTED_ORIGINS = [
-    'https://56fa-112-196-43-19.ngrok-free.app',  
-]
+
 
 # Application definition
 
@@ -45,21 +43,18 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework.authtoken',
+    'corsheaders',
 
     'api',
     'filetomail',
     'imagetopdf',
-    'stripe_app.apps.StripeAppConfig',
-
-    'allauth',
-    'allauth.account',
-    'allauth.socialaccount',
-    'allauth.socialaccount.providers.google',
-    'rest_framework_social_oauth2',
+    'insta_app',
+    'stripe_app.apps.StripeAppConfig'
 
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -147,12 +142,18 @@ REST_FRAMEWORK = {
     # 'DEFAULT_RENDERER_CLASSES': [
     #     'rest_framework_xml.renderers.XMLRenderer',
     # ],
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/minute',
+        'user': '100/minute'
+    },
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.BasicAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-        'allauth.account.auth_backends.AuthenticationBackend',
-        'rest_framework_social_oauth2.authentication.SocialAuthentication',
     ],
     
     # Permission settings
@@ -202,8 +203,8 @@ CHANNEL_LAYERS = {
     },
 }
 
-CELERY_BROKER_URL = 'redis://127.0.0.1:6379'
-CELERY_RESULT_BACKEND = 'django-db'
+CELERY_BROKER_URL = 'redis://127.0.0.1:6390'
+CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6390'
 
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
@@ -238,3 +239,20 @@ FIREBASE_APP = initialize_app()
 
 STRIPE_PUBLIC_KEY = 'pk_test_51O2SLGSImlUdVW6uAsaqe3ISwdDxzdbzQrHKHddeEvDaZJj71OlFCSFAvwuw0GTiJZGOgdkm3T2AjsXyyzssjXsA00jOg8wWT5'
 STRIPE_SECRET_KEY = 'sk_test_51O2SLGSImlUdVW6uwpqy0AbiPHY2cU06bdFQdyETYZio9LhCv8TOC6LYW3xQ86nz46D27Xt4RRPXeeGB2euJ7vR8006HofI1U4'
+ 
+FCM_APIKEY = "AAAAsxujhoE:APA91bGgl9ncVQfQB6uNOhgnxDY-mFCeVLSv4BgSBLhxiNeHL2TFykIzl0N44O68uOIC-rxL1ni7oVAK3j3hAUXXXzf-Hn6E40byMG2f1mNXzm-3WVp3t0ZDNXLZvOfcfCMO4wAG4NrR"
+ 
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:3000',  
+    'https://2270-112-196-43-19.ngrok-free.app'
+]
+CORS_ALLOW_ALL_HEADERS = True
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://127.0.0.1:9944/1',
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        }
+    }
+}

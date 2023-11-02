@@ -202,9 +202,9 @@ def get_all_chats(user1):
             pass
         else:
             if user1 < i.id:
-                all_chats.append({'link':f'https://45e6-112-196-43-19.ngrok-free.app/user/chatting/{user1}/{i.id}/', 'email':i.email})
+                all_chats.append({'link':f'http://127.0.0.1:8000/user/chatting/{user1}/{i.id}/', 'email':i.email})
             elif user1 > i.id:
-                all_chats.append({'link':f'https://45e6-112-196-43-19.ngrok-free.app/user/chatting/{i.id}/{user1}/', 'email':i.email})
+                all_chats.append({'link':f'http://127.0.0.1:8000/user/chatting/{i.id}/{user1}/', 'email':i.email})
     return all_chats
 
 import threading
@@ -224,7 +224,7 @@ class EmailThread(threading.Thread):
         context = {'subject':self.subject, 'html_content':self.html_content}
         temp = render_to_string('send_mul_mails.html', context)
         print(self.recipient_list, type(self.recipient_list), '============================================')
-        msg = EmailMultiAlternatives(f"this is for testing purpose", temp, settings.DEFAULT_FROM_EMAIL, self.recipient_list)
+        msg = EmailMultiAlternatives(f"this is .............", temp, settings.DEFAULT_FROM_EMAIL, self.recipient_list)
         msg.content_subtype = 'html'
         msg.send()
         print('sent')

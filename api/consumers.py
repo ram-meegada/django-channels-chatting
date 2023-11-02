@@ -7,10 +7,12 @@ import asyncio, json
 from .models import ChatBotModel
 from channels.db import database_sync_to_async
 from asgiref.sync import async_to_sync
-from .models import GroupModel, SessionIdStoreModel, ChatStorageWithSessionIdModel, OneToOneChatRoomModel, SaveChatOneToOneRoomModel, User
+from .models import GroupModel, SessionIdStoreModel, ChatStorageWithSessionIdModel, OneToOneChatRoomModel, \
+                    SaveChatOneToOneRoomModel, User, UserSession
 import base64, random
 from asgiref.sync import sync_to_async
-
+from pyfcm import FCMNotification
+from abstractbaseuser_project import settings
 
 class MyAsyncConsumer(AsyncConsumer):
     async def websocket_connect(self, event):
@@ -213,7 +215,6 @@ class MyAsyncWebsocketConsumer(AsyncWebsocketConsumer):
         return id
     
 
-
 from channels.layers import get_channel_layer
 class UserChattingWithFriendConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -232,7 +233,8 @@ class UserChattingWithFriendConsumer(AsyncWebsocketConsumer):
         await self.accept()
     def get_all_chat_rooms(self):
         all_chats = OneToOneChatRoomModel.objects.all().values_list('room_name')
-        return list(all_chats)
+        print(set(all_chats), '--------all chats =============')
+        return set(all_chats)
 
     async def receive(self, text_data):
         user_name = await database_sync_to_async(self.get_user_name)(self.scope['user'].id)
@@ -243,12 +245,32 @@ class UserChattingWithFriendConsumer(AsyncWebsocketConsumer):
                 'msg': f'{user_name}: {text_data}'
             }                                      
         )
+        print(self.scope['user'], '------------- scope user ===============')
+        if self.scope['user'].id == self.scope['url_route']['kwargs']['user1']:
+            send_notification_to = await database_sync_to_async(self.get_user_to_send_notification)(self.scope['url_route']['kwargs']['user2'])
+            print(send_notification_to, '-----send_notification_to1111111111-----------------')                
+        else:
+            send_notification_to = await database_sync_to_async(self.get_user_to_send_notification)(self.scope['url_route']['kwargs']['user1'])
+            print(send_notification_to, '===========send_notification_to22222222222==============')                
+        push_service = FCMNotification(api_key=f"{settings.FCM_APIKEY}")
+        result = push_service.notify_single_device(
+            registration_id = f"{send_notification_to}",
+            message_title = f"You have a message from {self.scope['user'].first_name}",
+            message_body = f"{text_data}",
+        )
+    def get_user_to_send_notification(self, user_id):
+        try:
+            notification_to_user = UserSession.objects.get(user_id=user_id)
+            return notification_to_user.device_token
+        except:
+            return None
+
     def get_user_name(self, user_id):
         user_name = User.objects.get(id=user_id).first_name
         return user_name
 
     async def chat_message(self, event):
-        await self.send(text_data=event['msg'])    
+        await self.send(text_data=event['msg'])
     async def disconnect(self, close_code):
         print('websocket disconnected.....', close_code)
 

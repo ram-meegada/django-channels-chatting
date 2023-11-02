@@ -128,6 +128,7 @@ class UserChattingWithOpenAIAgent(AsyncWebsocketConsumer):
         self.session_id = self.scope['url_route']['kwargs']['session']
         self.user_id = self.scope['url_route']['kwargs']['user_id']
         self.username_in_chatting = await database_sync_to_async(self.get_username_in_chatting)(self.user_id)
+        self.user_profile = self.username_in_chatting[2]
         self.get_active_session_with_agent = await database_sync_to_async(self.get_active_session_of_user)(self.scope['url_route']['kwargs']['session'])
         store_chat = await database_sync_to_async(SessionIdStoreModel.objects.get)(session_id = self.session_id)
         self.session_foreign_key = store_chat.id
@@ -167,7 +168,6 @@ class UserChattingWithOpenAIAgent(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         newMessage = json.loads(text_data)
         talking_with_whom = await database_sync_to_async(self.get_talking_to_whom)(self.session_id)
-        # print(talking_with_whom, '=============talking_with_whomtalking_with_whom=========')
         if talking_with_whom[0] == True:
             self.get_active_session_with_agent[1] = talking_with_whom[1]
         else:
@@ -179,10 +179,9 @@ class UserChattingWithOpenAIAgent(AsyncWebsocketConsumer):
             await self.channel_layer.group_send(self.session_id,
                     {
                         'type': 'chat_message',
-                        'msg': f'{self.username_in_chatting[1]}: {newMessage["input_text"]}'
+                        'msg': f'{newMessage["input_text"]}'
                     }                                      
                 )
-
         elif newMessage["input_text"] != "talk to human" and self.get_active_session_with_agent[1] is None:
             print(newMessage.get("input_response") ,'2222222222222222222222222222222222')
             if not newMessage.get("input_response"):
@@ -207,8 +206,8 @@ class UserChattingWithOpenAIAgent(AsyncWebsocketConsumer):
             await self.channel_layer.group_add(self.session_id, self.channel_name)
 
     async def chat_message(self, event):
-        message_to_be_sent = event['msg'] +':'+ event['type']
-        await self.send(text_data=event['msg'])
+        message_to_be_sent = json.dumps({"user_name":self.username_in_chatting[1], "response_message":event['msg'], "timestamp":str(datetime.now()), "user_profile":self.user_profile})
+        await self.send(text_data=message_to_be_sent)
 
     def get_talking_to_whom(self, session_id):
         status = SessionIdStoreModel.objects.get(session_id=session_id)
@@ -224,7 +223,7 @@ class UserChattingWithOpenAIAgent(AsyncWebsocketConsumer):
     def get_username_in_chatting(self, user_id):
         try:
             user = User.objects.get(id = user_id)
-            return (user.role_of_user, user.first_name)
+            return (user.role_of_user, user.first_name, str(user.profile_picture))
         except Exception as e:
             return (0, 'Not there')
 
@@ -239,6 +238,7 @@ class UserChattingWithBasicBotAgent(AsyncWebsocketConsumer):
         self.user_id = self.scope['url_route']['kwargs']['user_id']
         self.username_in_chatting = await database_sync_to_async(self.get_username_in_chatting)(self.user_id)
         self.get_active_session_with_agent = await database_sync_to_async(self.get_active_session_of_user)(self.scope['url_route']['kwargs']['session'])
+        self.user_profile_pic = self.username_in_chatting[2]
         print(self.get_active_session_with_agent, '----------self.get_active_session_with_agent-------------')
         store_chat = await database_sync_to_async(SessionIdStoreModel.objects.get)(session_id = self.session_id)
         self.session_foreign_key = store_chat.id
@@ -265,6 +265,7 @@ class UserChattingWithBasicBotAgent(AsyncWebsocketConsumer):
             return None
         
     async def receive(self, text_data):
+        print(newMessage, type(newMessage), '-----------------------------')
         newMessage = json.loads(text_data)
         with open(f'{text_data["input_text"]}' , 'r', encoding="utf-8") as file:
             file.read()
@@ -307,6 +308,7 @@ class UserChattingWithBasicBotAgent(AsyncWebsocketConsumer):
 
     async def chat_message(self, event):
         message_to_be_sent = event['msg'] +':'+ event['type']
+        print(message_to_be_sent, '------------------------message to be sent-------------------')
         await self.send(text_data=event['msg'])
 
     def get_talking_to_whom(self, session_id):
@@ -323,7 +325,7 @@ class UserChattingWithBasicBotAgent(AsyncWebsocketConsumer):
     def get_username_in_chatting(self, user_id):
         try:
             user = User.objects.get(id = user_id)
-            return (user.role_of_user, user.first_name)
+            return (user.role_of_user, user.first_name, str(user.profile_picture))
         except Exception as e:
             return (0, 'Not there')
 

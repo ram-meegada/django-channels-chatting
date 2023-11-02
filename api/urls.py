@@ -6,11 +6,12 @@ urlpatterns = [
     path('users/', GetAllUsers.as_view()),
     path('chatbot/', ChatbotView.as_view(),name='homepage'),
 
-    ###################
+    # one to one chatting
     path('login/', LoginUser.as_view(), name='login'),
     path('user/all-chats/', DisplayAllchats.as_view(), name='all-chats'),
-    path('user/checking/', CheckingView.as_view(), name='checking'),
+    path('user/chatting/<int:user1>/<int:user2>/', ChattingView.as_view(), name='chatting'),
 
+    path('user/checking/', CheckingView.as_view(), name='checking'),
     path('client/create-chatbot/', CreateChatbot.as_view()),
     path('channel-layers/<str:group_name>/', ChannelLayersView.as_view()),
 
@@ -32,12 +33,8 @@ urlpatterns = [
     path('admin-user/<int:user_id>/', IsAdminUserView.as_view(), name='isadmin'),
 
 
-    path('user/chatting/<int:user1>/<int:user2>/', ChattingView.as_view(), name='chatting'),
-
 
     path('registration/', RegistrationApi.as_view(), name='registration'),
-    path('google/', GoogleSocialAuthView.as_view()),
-    path('social-signup/', SocialSignupAPIView.as_view(), name='social-signup'),
     path('user/create-new-session/<int:user_id>/', CreateNewSessionForUserView.as_view(), name='create_new_session'),
     path('user/all-chat-sessions/<int:user_id>/', GetAllCustomerChatsView.as_view(), name='customer_all_chats'),
     path('login2/', LoginUser2.as_view(), name='login2'),
@@ -54,6 +51,7 @@ urlpatterns = [
 
 
     path('send-mails/', SendMailsAsynchronouslyView.as_view(), name="send-mails"),
+    path('send-mails1/', SendMailToRecipients.as_view(), name="send-mails1"),
     path('generate-qr/', GeneratescidQrcode.as_view(), name="send-msafds"),
 
     path('push-notification/', CheckPushNotificationView.as_view(), name="checkpushnotificationview" )

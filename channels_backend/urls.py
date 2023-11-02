@@ -13,6 +13,7 @@ urlpatterns = [
     path('queued-session-chats/', GetAllQueuedChatsToAdminView.as_view(), name='queuedsession2'),
     path('assign-agent-to-user-session/<str:session>/', AdminAssignAgentToUserSessionView.as_view(), name='assignagent2'),
 
+
     path('agent/all-customer-chats/', AgentAllCustomerChatsView.as_view(), name="agentallcustomerchats2"),
     path('display-previous-chats/<str:session>/', DisplayPreviousChatsView.as_view(), name='displayoldchats'),
 ]

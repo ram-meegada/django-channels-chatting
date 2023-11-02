@@ -47,6 +47,7 @@ class AgentAllCustomerChatsView(APIView):
             user = request.user.first_name
             return Response({'data':serializer.data, 'message':'Your assigned chats', 'status': status.HTTP_200_OK})
         return HttpResponseRedirect(reverse('login2'))
+    
 
 class CreateNewSessionForUserView(APIView):
     permission_classes = [IsAuthenticated]
@@ -83,6 +84,7 @@ class ChatWithChatbotAndAgentView(APIView):
             return Response({
                 'websocket_url':websocket_url,
                 'username_in_chatting': f'{username_in_chatting}',
+                'user_image': str(request.user.profile_picture)
                 })
         return Response({'data':None, 'message':'something went wrong'})
 
@@ -100,7 +102,7 @@ class GetAllUsersView(APIView):
     def get(self, request):
         print(33333333333333333333333)
         all_users = User.objects.all().values('id', 'first_name', 'email')
-        return Response({'data': all_users, 'message':'all user details'}) 
+        return Response({'data': all_users, 'message':'all user details', 'status':status.HTTP_200_OK}) 
     
 class LoginUser(APIView):
     def post(self, request):

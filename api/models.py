@@ -68,6 +68,18 @@ class User(AbstractUser):
     #         models.Index(fields=['id'])
     #     ]
 
+class UserSession(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    device_token = models.CharField(max_length=560, null = True, blank= True)
+    user_auth_token = models.TextField(null = True, blank= True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    deleted_at = models.DateTimeField(blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    is_deleted = models.BooleanField(default=False)
+    def __str__(self):
+        return str(self.id)
 
 class QuestionAndAnswer(models.Model):
     user_id = models.ForeignKey(User, on_delete=models.CASCADE) 
@@ -81,7 +93,7 @@ class GroupModel(models.Model):
 
     
 
-################################
+############### one to one chat #################
 class OneToOneChatRoomModel(models.Model):
     room_name = models.CharField(max_length=100)
     user1 = models.ForeignKey(User, on_delete=models.CASCADE, related_name='mainuser')    
