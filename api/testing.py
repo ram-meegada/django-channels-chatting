@@ -262,16 +262,26 @@ data = [
             "end_time": "00:00:00",
             "of_company": 3,
             "company": "laptop"
-        },
-        {
-            "id": 38,
-            "day": "MONDAY",
-            "start_time": "00:00:00",
-            "end_time": "09:00:00",
-            "of_company": 3,
-            "company": "laptop"
         }
     ]
 records = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"]
 data.sort(key=lambda v:records.index(v["day"]))
-print(data)
+class Class1:
+    def m(self):
+        print("In Class1") 
+       
+class Class2(Class1):
+    def m(self):
+        print("In Class2")
+ 
+class Class3(Class1):
+    def m(self):
+        print("In Class3")  
+        
+class Class4(Class2, Class3):
+    pass  
+     
+# d = Class4()   
+# Class1.m(d)
+pi = 3.14567423424234
+print(float(f"{pi:.5f}"))

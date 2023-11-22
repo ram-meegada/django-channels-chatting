@@ -4,5 +4,7 @@ from .views import *
 
 urlpatterns = [
     path('user/followers/<int:user_id>/', GetAllUserFollowersView.as_view()),
-    path('user/following/<int:user_id>/', GetAllUserFollowingView.as_view())
+    path('user/following/<int:user_id>/', GetAllUserFollowingView.as_view()),
+
+    path('get/movies-list/', GetAllMoviesLIstingThirdPartyApi.as_view()),
 ]

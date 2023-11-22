@@ -16,4 +16,8 @@ urlpatterns = [
 
     path('agent/all-customer-chats/', AgentAllCustomerChatsView.as_view(), name="agentallcustomerchats2"),
     path('display-previous-chats/<str:session>/', DisplayPreviousChatsView.as_view(), name='displayoldchats'),
+
+    #requests counter
+    path('get-requests-count/', GetRequestsCountView.as_view(), name='requests-count'),
+    path('reset-requests-count/', ResetRequestsCountView.as_view(), name='reset-requests-count')
 ]

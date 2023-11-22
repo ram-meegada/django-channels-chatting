@@ -9,7 +9,7 @@ from django.core.files import File
 import pyqrcode
 import png, os
 from pyqrcode import QRCode
-
+from datetime import datetime
 # class UserManager(BaseUserManager):
 #     def create_user(self, email, password=None, **extra_fields):
 #         if not email:
@@ -56,17 +56,18 @@ class User(AbstractUser):
     role_of_user = models.CharField(choices=USER_ROLE_CHOICES, default='4', max_length=100)
     bot_subscription = models.IntegerField(blank=True, null=True, help_text="1.six months, 2.one year, 3.two years")
     trail_period = models.IntegerField(blank=True, null=True, help_text="1.six months, 2.one year, 3.two years")
-    auth_provider = models.CharField(
-        max_length=255, blank=False,
-        null=False, default=AUTH_PROVIDERS.get('email'))
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    # auth_provider = models.CharField(
+    #     max_length=255, blank=False,
+    #     null=False, default=AUTH_PROVIDERS.get('email'))
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
-    # class Meta:
-    #     db_table = 'user_table'
-    #     indexes = [
-    #         models.Index(fields=['id'])
-    #     ]
+    class Meta:
+        db_table = 'user_table'
+        # indexes = [
+        #     models.Index(fields=['first_name'])
+        # ]
 
 class UserSession(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -150,6 +151,11 @@ class SessionIdStoreModel(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
     def __str__(self):
         return self.session_id
+    # class Meta:
+    #     db_table = 'session_model'
+    #     indexes = [
+    #         models.Index(fields=['session_id'])
+    #     ]
 
 class ChatStorageWithSessionIdModel(models.Model):
     session = models.ForeignKey(SessionIdStoreModel, on_delete=models.CASCADE)

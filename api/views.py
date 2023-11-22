@@ -44,7 +44,7 @@ from datetime import datetime
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from api.utils import send_html_mail   
-
+from django.test import TestCase
 
 class GetAllUsers(APIView):
     def get(self, request):
@@ -297,14 +297,13 @@ class IsAdminUserView(APIView):
 class LoginUser2(TemplateView):
     template_name = 'login.html'
     def post(self,request):
+        print(request.session.get('counter'), '-------------request.session.get(counter)--------------')
         email = request.POST['email']
         password = request.POST['password']
         user = authenticate(request, email=email, password=password)
         if user:
-            print(user, user.role_of_user, user.id, '=============user=============--------------')
             login(request, user)
             if user.role_of_user == "2":
-                print(22222222222222222, user.id)
                 return HttpResponseRedirect(reverse('customer_all_chats', args=[user.id]))
             elif user.role_of_user == "3":
                 return HttpResponseRedirect(reverse('agentallcustomerchats'))
@@ -339,6 +338,7 @@ class LogoutAgentUser(TemplateView):
     
 class GetAllUsersView(APIView):
     def get(self, request):
+        print(request.session.get('counter'), '-----------------request.session.get(counter)---------')
         all_users = User.objects.all().values('first_name', 'email')
         return Response({'data': all_users, 'message':'all user details'})    
     
@@ -358,7 +358,7 @@ class GetAllQueuedChatsToAdminView(TemplateView):
             return render(request, self.template_name, locals())
         else:
             return HttpResponse('no access')
-        
+
 class AdminAssignAgentToUserSessionView(TemplateView):
     template_name = "all_queued_sessions.html"
     def get(self, request, session, user):
@@ -522,3 +522,4 @@ class SendMailToRecipients(APIView):
         msg.send()        
         end_time = datetime.now()
         return Response({'time_taken':str(end_time-start_time), 'message':'message sent successfully'})
+    

@@ -12,6 +12,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.hashers import check_password, make_password
 from .serializers import GetAllUserSessionsSerializer, GetAllQueuedSessionsSerializer, ChatStorageSerializer
+from datetime import datetime
+
 
 class GetAllQueuedChatsToAdminView(APIView):
     permission_classes = [IsAuthenticated]
@@ -100,24 +102,23 @@ class GetAllCustomerChatsView(APIView):
 
 class GetAllUsersView(APIView):
     def get(self, request):
-        print(33333333333333333333333)
+        print(request.session.get('counter'), 33333333333333333333333)
         all_users = User.objects.all().values('id', 'first_name', 'email')
         return Response({'data': all_users, 'message':'all user details', 'status':status.HTTP_200_OK}) 
     
 class LoginUser(APIView):
     def post(self, request):
-        print(44444444444444444444)
         email = request.data['email']
         password= request.data['password']
         try:
             user = User.objects.get(email=email)
         except Exception as e:
-            data = {"user":"some error"}
+            data = {"user":"no user found"}
             return Response(data)   
         chk_pwd = check_password(password, user.password)
         if chk_pwd:
             token = RefreshToken.for_user(user)
-            data = {"user":user.email,"access_token":str(token.access_token),"refresh_token":str(token)}
+            data = {"user":user.email,"access_token":str(token.access_token), "refresh_token":str(token)}
             return Response({"data":data})
         else:
             data = {"user":user.email,'message':"wrong password"}
@@ -125,8 +126,25 @@ class LoginUser(APIView):
         
 class DisplayPreviousChatsView(APIView):
     def get(self, request, session):
-        session_id = get_object_or_404(SessionIdStoreModel, session_id=session)
-        print(session_id, '----------------session------------')
+        start_time = datetime.now() 
+        # session_id = get_object_or_404(SessionIdStoreModel, session_id=session)
+        session_id = SessionIdStoreModel.objects.get(session_id=session)
+        end_time = datetime.now()
         all_chats = ChatStorageWithSessionIdModel.objects.filter(session_id=session_id).order_by('timestamp')
         serializer = ChatStorageSerializer(all_chats, many=True)
-        return Response({"data":serializer.data,'message':"all chats of this session"})
+        return Response({"data":serializer.data, 'message':"all chats of this session", "time taken":end_time-start_time})
+    
+class GetRequestsCountView(APIView):
+    def get(self, request):
+        if request.session.get('counter'):
+            count = request.session.get('counter')    
+        else:
+            count = 0
+        return Response({"data":count, 'message':"number of requests for server"})    
+    
+class ResetRequestsCountView(APIView):
+    def put(self, request):
+        if request.session.get('counter'):
+            request.session['counter'] = 0    
+        print(request.session.get('counter'), '------------request.session.get(counter)-------------')    
+        return Response({"data":None, 'message':"request count reset successfully"})    

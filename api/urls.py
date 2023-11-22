@@ -29,7 +29,6 @@ urlpatterns = [
     path('user/delete/<int:id>/', DeleteUserAPI.as_view(), name='DeleteUser'),
     
     path('user/login/', LoginApiView.as_view(), name='loginapiview'),
-    path('user/<int:user_id>/', GetUserByIdView.as_view(), name='user_detail'),
     path('admin-user/<int:user_id>/', IsAdminUserView.as_view(), name='isadmin'),
 
 
@@ -54,5 +53,7 @@ urlpatterns = [
     path('send-mails1/', SendMailToRecipients.as_view(), name="send-mails1"),
     path('generate-qr/', GeneratescidQrcode.as_view(), name="send-msafds"),
 
-    path('push-notification/', CheckPushNotificationView.as_view(), name="checkpushnotificationview" )
+    path('push-notification/', CheckPushNotificationView.as_view(), name="checkpushnotificationview" ),
+
+    path('user/<int:user_id>/', GetUserByIdView.as_view(), name='user_detail'),
 ]

@@ -49,11 +49,13 @@ INSTALLED_APPS = [
     'filetomail',
     'imagetopdf',
     'insta_app',
-    'stripe_app.apps.StripeAppConfig'
+    'stripe_app.apps.StripeAppConfig',
 
+    'debug_toolbar',
 ]
 
 MIDDLEWARE = [
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -65,6 +67,12 @@ MIDDLEWARE = [
     'abstractbaseuser_project.custom_middlewares.CustomHeaderMiddleware',
     'allauth.account.middleware.AccountMiddleware',
 ]
+
+DEBUG = True
+INTERNAL_IPS = ['127.0.0.1',]
+DEBUG_TOOLBAR_CONFIG = {
+    "SHOW_TOOLBAR_CALLBACK": lambda request: True,
+}
 
 ROOT_URLCONF = 'abstractbaseuser_project.urls'
 
