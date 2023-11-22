@@ -133,7 +133,7 @@ class DisplayPreviousChatsView(APIView):
         all_chats = ChatStorageWithSessionIdModel.objects.filter(session_id=session_id).order_by('timestamp')
         serializer = ChatStorageSerializer(all_chats, many=True)
         return Response({"data":serializer.data, 'message':"all chats of this session", "time taken":end_time-start_time})
-    
+
 class GetRequestsCountView(APIView):
     def get(self, request):
         if request.session.get('counter'):

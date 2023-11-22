@@ -48,3 +48,4 @@ class ChatStorageSerializer(serializers.ModelSerializer):
             return user_name
         except:
             return None
+        

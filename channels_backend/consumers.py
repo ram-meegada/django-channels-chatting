@@ -182,6 +182,7 @@ class UserChattingWithOpenAIAgent(AsyncWebsocketConsumer):
                         'msg': f'{newMessage["input_text"]}'
                     }                                      
                 )
+            
         elif newMessage["input_text"] != "talk to human" and self.get_active_session_with_agent[1] is None:
             print(newMessage.get("input_response") ,'2222222222222222222222222222222222')
             if not newMessage.get("input_response"):
