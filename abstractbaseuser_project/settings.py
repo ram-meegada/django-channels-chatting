@@ -112,7 +112,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'channels_db',
         'USER': 'postgres',
-        'PASSWORD' : 'Ramu@123',
+        'PASSWORD' : 'apptunix',
         'HOST': 'localhost',
         'PORT' : '5432',
     }

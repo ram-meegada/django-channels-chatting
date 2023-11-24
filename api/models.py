@@ -214,3 +214,7 @@ class ScidModel(models.Model):
         self.qr_code.save(f'image{random.randint(0,9999)}.png',File(buffer),save=False)
         canvas.close()
         super(ScidModel, self).save(*args,**kwargs)
+
+
+class SaveCsvFileModel(models.Model):
+    csv_file = models.FileField(upload_to="csv_files", null=True, blank=True)        

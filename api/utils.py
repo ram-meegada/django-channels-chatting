@@ -179,19 +179,19 @@ from .models import User
 #     return (data, dataframe_pattern_words, ourClasses, ourNewModel)
 
 
-import openai
+# import openai
 
 
-openai.api_key = "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"
-def open_ai_chat(input_text):
-    if input_text:
-        messages = [{"role": "system", "content": input_text}]
-        chatbot = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo", messages=messages
-        )
-        reply = chatbot.choices[0].message.content
-        messages.append({"role": "assistant", "content": reply})
-        return reply
+# openai.api_key = "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"
+# def open_ai_chat(input_text):
+#     if input_text:
+#         messages = [{"role": "system", "content": input_text}]
+#         chatbot = openai.ChatCompletion.create(
+#             model="gpt-3.5-turbo", messages=messages
+#         )
+#         reply = chatbot.choices[0].message.content
+#         messages.append({"role": "assistant", "content": reply})
+#         return reply
 
 
 def get_all_chats(user1):
@@ -223,7 +223,6 @@ class EmailThread(threading.Thread):
     def run(self):
         context = {'subject':self.subject, 'html_content':self.html_content}
         temp = render_to_string('send_mul_mails.html', context)
-        print(self.recipient_list, type(self.recipient_list), '============================================')
         msg = EmailMultiAlternatives(f"this is .............",  temp, settings.DEFAULT_FROM_EMAIL, self.recipient_list)
         msg.content_subtype = 'html'
         msg.send()

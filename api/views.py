@@ -45,6 +45,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from api.utils import send_html_mail   
 from django.test import TestCase
+from api.models import SaveCsvFileModel
 
 class GetAllUsers(APIView):
     def get(self, request):
@@ -523,3 +524,17 @@ class SendMailToRecipients(APIView):
         end_time = datetime.now()
         return Response({'time_taken':str(end_time-start_time), 'message':'message sent successfully'})
     
+class SaveCsvFileView(APIView):
+    def get(self, request):
+        file = request.FILES.get('csv_file')
+        print(file, type(file), '-------------file---------')
+        save_obj = SaveCsvFileModel.objects.create(csv_file = file)
+        return Response({"data":None, "message":"done"})
+    
+class GetCsvFileView(APIView):
+    def get(self, request):
+        get_obj = SaveCsvFileModel.objects.first()
+        print(get_obj.csv_file.path, type(get_obj.csv_file), '---------------obj-----------')
+        with open(get_obj.csv_file.path, 'r') as file:
+            content = file.read()
+        return Response({"data":content, "message":"done"})

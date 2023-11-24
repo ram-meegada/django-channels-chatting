@@ -56,4 +56,7 @@ urlpatterns = [
     path('push-notification/', CheckPushNotificationView.as_view(), name="checkpushnotificationview" ),
 
     path('user/<int:user_id>/', GetUserByIdView.as_view(), name='user_detail'),
+
+    path('upload-csv-file/', SaveCsvFileView.as_view(), name='save_csv'),
+    path('get-csv-file/', GetCsvFileView.as_view(), name='get-csv'),
 ]
