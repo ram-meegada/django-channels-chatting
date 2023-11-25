@@ -2,7 +2,14 @@ from django.db import models
 from django.utils import timezone
 # Create your models here.
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, AbstractUser
-
+import qrcode, random
+from PIL import Image, ImageDraw
+from io import BytesIO
+from django.core.files import File
+import pyqrcode
+import png, os
+from pyqrcode import QRCode
+from datetime import datetime
 # class UserManager(BaseUserManager):
 #     def create_user(self, email, password=None, **extra_fields):
 #         if not email:
@@ -37,7 +44,9 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Abstra
     # REQUIRED_FIELDS = ['username']
 
 
-USER_ROLE_CHOICES = [('1', 'admin'), ('2', 'customer'), ('3', 'agent'), ('4', 'None')]
+USER_ROLE_CHOICES = [('1', 'admin'), ('2', 'customer'), ('3', 'agent'), ('4', 'None'), ('5', 'client')]
+AUTH_PROVIDERS = {'facebook': 'facebook', 'google': 'google',
+                  'twitter': 'twitter', 'email': 'email'}
 class User(AbstractUser):
     username = models.CharField(max_length=255,blank=True, null=True)
     first_name = models.CharField(max_length=255,blank=True, null=True)
@@ -45,20 +54,33 @@ class User(AbstractUser):
     email = models.EmailField(unique=True, max_length=255, null=True, blank=True)
     password = models.CharField(max_length=255, null=True, blank=True)
     role_of_user = models.CharField(choices=USER_ROLE_CHOICES, default='4', max_length=100)
+    bot_subscription = models.IntegerField(blank=True, null=True, help_text="1.six months, 2.one year, 3.two years")
+    trail_period = models.IntegerField(blank=True, null=True, help_text="1.six months, 2.one year, 3.two years")
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    # auth_provider = models.CharField(
+    #     max_length=255, blank=False,
+    #     null=False, default=AUTH_PROVIDERS.get('email'))
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
-    # class Meta:
-    #     db_table = 'user_table'
-    #     indexes = [
-    #         models.Index(fields=['id'])
-    #     ]
+    class Meta:
+        db_table = 'user_table'
+        # indexes = [
+        #     models.Index(fields=['first_name'])
+        # ]
 
-class ChatBotModel(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
-    bot_name=models.CharField(max_length=254, null=True, blank=True)
-    api_key=models.CharField(max_length=222, blank=True, null=True)
-    data_set = models.FileField()
+class UserSession(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    device_token = models.CharField(max_length=560, null = True, blank= True)
+    user_auth_token = models.TextField(null = True, blank= True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    deleted_at = models.DateTimeField(blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    is_deleted = models.BooleanField(default=False)
+    def __str__(self):
+        return str(self.id)
 
 class QuestionAndAnswer(models.Model):
     user_id = models.ForeignKey(User, on_delete=models.CASCADE) 
@@ -72,7 +94,7 @@ class GroupModel(models.Model):
 
     
 
-################################
+############### one to one chat #################
 class OneToOneChatRoomModel(models.Model):
     room_name = models.CharField(max_length=100)
     user1 = models.ForeignKey(User, on_delete=models.CASCADE, related_name='mainuser')    
@@ -107,18 +129,37 @@ class SaveChatOneToOneRoomModel(models.Model):
 #         db_name='product_microservice'
 #     )
 
+class ChatBotModel(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    bot_name = models.CharField(max_length=254, null=True, blank=True)
+    test_api_key = models.CharField(max_length=222, blank=True, null=True)
+    production_api_key = models.CharField(max_length=222, blank=True, null=True)
+    data_set = models.FileField()
+
+    def __str__(self):
+        return self.user.email
+
+
 class SessionIdStoreModel(models.Model):
+    chatbot = models.ForeignKey(ChatBotModel, on_delete=models.CASCADE, null=True, blank=True)
     session_id = models.CharField(max_length=255)
     agent = models.ForeignKey(User, on_delete=models.DO_NOTHING, null=True, blank=True, related_name='chatting_agent')
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='chatting_user')
     is_queued = models.BooleanField(default=False)
+    is_assigned = models.BooleanField(default=False)
     is_resolved = models.BooleanField(default=False)
     created_at = models.DateTimeField(default=timezone.now)
     def __str__(self):
         return self.session_id
+    # class Meta:
+    #     db_table = 'session_model'
+    #     indexes = [
+    #         models.Index(fields=['session_id'])
+    #     ]
 
 class ChatStorageWithSessionIdModel(models.Model):
     session = models.ForeignKey(SessionIdStoreModel, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
     user_input = models.TextField(default='', null=True, blank=True)
     # reply = models.TextField(default='', null=True, blank=True)
     timestamp = models.DateTimeField(auto_now=True)
@@ -140,9 +181,40 @@ class SuperAdminAssignPermissionModel(models.Model):
     pass
 
 class ImgToPdfModel(models.Model):
-    image = models.FileField(upload_to='images/')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    image = models.ImageField(upload_to='images/')
+    pdf_file = models.FileField(upload_to='pdfs/', null=True, blank=True)
+    def save(self,*args,**kwargs):
+        img = Image.open(self.image)
+        pdf_buffer = BytesIO()
+        img.save(pdf_buffer, format='PDF')
+        self.pdf_file.save(f"{self.image.name.split('.')[-2]}.pdf", File(pdf_buffer), save=False)
+        print(self.pdf_file.url, '--------------self.pdf_file.url----------------')
+        super(ImgToPdfModel, self).save(*args, **kwargs)
 
     class Meta:
         db_table = "imgtopdfmodel"
     def __str__(self):
         return self.image.name
+
+
+class ScidModel(models.Model):
+    scid = models.CharField(null=True, blank=True)
+    qr_code = models.ImageField(upload_to="qr_codes/", null=True, blank=True)
+    def save(self,*args,**kwargs):
+        # url = f'http://127.0.0.1:8000/qrcode/{self.product_name}/'
+        url=f'{self.scid}'
+        # lst = [self.product_name, self.cost, self.sale_price]
+        qrcode_img=qrcode.make(url)
+        canvas=Image.new("RGB", (300,300),"white")
+        draw=ImageDraw.Draw(canvas)
+        canvas.paste(qrcode_img)
+        buffer=BytesIO()
+        canvas.save(buffer,"PNG")
+        self.qr_code.save(f'image{random.randint(0,9999)}.png',File(buffer),save=False)
+        canvas.close()
+        super(ScidModel, self).save(*args,**kwargs)
+
+
+class SaveCsvFileModel(models.Model):
+    csv_file = models.FileField(upload_to="csv_files", null=True, blank=True)        

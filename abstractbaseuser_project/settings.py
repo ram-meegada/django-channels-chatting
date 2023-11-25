@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
+from firebase_admin import initialize_app
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -26,9 +27,8 @@ SECRET_KEY = 'django-insecure-2-!yajfk=q*le&@fi+*^741ykk@1@8h(n45swamf$fu9ts4s*3
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
-CSRF_TRUSTED_ORIGINS = [
-    'https://a8d1-122-160-196-233.ngrok-free.app',  
-]
+
+
 
 # Application definition
 
@@ -43,14 +43,20 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework.authtoken',
+    'corsheaders',
 
     'api',
-    'order_app',
+    'filetomail',
     'imagetopdf',
+    'insta_app',
+    'stripe_app.apps.StripeAppConfig',
 
+    'debug_toolbar',
 ]
 
 MIDDLEWARE = [
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -58,7 +64,15 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'abstractbaseuser_project.custom_middlewares.CustomHeaderMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
 ]
+
+DEBUG = True
+INTERNAL_IPS = ['127.0.0.1',]
+DEBUG_TOOLBAR_CONFIG = {
+    "SHOW_TOOLBAR_CALLBACK": lambda request: True,
+}
 
 ROOT_URLCONF = 'abstractbaseuser_project.urls'
 
@@ -81,7 +95,7 @@ TEMPLATES = [
 ASGI_APPLICATION = 'abstractbaseuser_project.asgi.application'
 # WSGI_APPLICATION = 'abstractbaseuser_project.wsgi.application'
 
-
+# SESSION_COOKIE_AGE = 30
 
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
@@ -98,14 +112,14 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'channels_db',
         'USER': 'postgres',
-        'PASSWORD' : 'Ramu@123',
+        'PASSWORD' : 'apptunix',
         'HOST': 'localhost',
         'PORT' : '5432',
     }
 }
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=10),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=120),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=10)
 }
 
@@ -136,6 +150,14 @@ REST_FRAMEWORK = {
     # 'DEFAULT_RENDERER_CLASSES': [
     #     'rest_framework_xml.renderers.XMLRenderer',
     # ],
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/minute',
+        'user': '100/minute'
+    },
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.BasicAuthentication',
@@ -148,7 +170,7 @@ REST_FRAMEWORK = {
     ]
 }
 
-# Internationalization
+# Internationalizationuser/create-new-session/
 # https://docs.djangoproject.com/en/4.1/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
@@ -184,13 +206,13 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("127.0.0.1", 6379)],
+            "hosts": [("127.0.0.1", 6380)],
         },
     },
 }
 
-CELERY_BROKER_URL = 'redis://127.0.0.1:6379'
-CELERY_RESULT_BACKEND = 'django-db'
+CELERY_BROKER_URL = 'redis://127.0.0.1:6390'
+CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6390'
 
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
@@ -215,4 +237,30 @@ WEBPUSH_SETTINGS = {
    "VAPID_PUBLIC_KEY": "BMS4B9X2tzeZujdzr76ed26qeuJLkH5d7BEiRCP3RZRMtJLQDeD0AFrtiaJWASyuKTziRz4QJHcugLSbOW1tEx8",
    "VAPID_PRIVATE_KEY": "wa1S66DDFxZy5rJARPy4To8gEhRPASsIE2UQ06zu6Gk",
    "VAPID_ADMIN_EMAIL": "admin@gmail.com"
+}
+
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = '714028301160-4882j53g0i9lh0jfndqpj7f1l42hdp3q.apps.googleusercontent.com'
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = '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'
+
+FIREBASE_APP = initialize_app()
+ 
+
+STRIPE_PUBLIC_KEY = 'pk_test_51O2SLGSImlUdVW6uAsaqe3ISwdDxzdbzQrHKHddeEvDaZJj71OlFCSFAvwuw0GTiJZGOgdkm3T2AjsXyyzssjXsA00jOg8wWT5'
+STRIPE_SECRET_KEY = 'sk_test_51O2SLGSImlUdVW6uwpqy0AbiPHY2cU06bdFQdyETYZio9LhCv8TOC6LYW3xQ86nz46D27Xt4RRPXeeGB2euJ7vR8006HofI1U4'
+ 
+FCM_APIKEY = "AAAAsxujhoE:APA91bGgl9ncVQfQB6uNOhgnxDY-mFCeVLSv4BgSBLhxiNeHL2TFykIzl0N44O68uOIC-rxL1ni7oVAK3j3hAUXXXzf-Hn6E40byMG2f1mNXzm-3WVp3t0ZDNXLZvOfcfCMO4wAG4NrR"
+ 
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:3000',  
+    'https://2270-112-196-43-19.ngrok-free.app'
+]
+CORS_ALLOW_ALL_HEADERS = True
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://127.0.0.1:9944/1',
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        }
+    }
 }

@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pdf download</title>
+</head>
+<body>
+    <h1>PDF Download</h1>
+    <p>Click the link below to download the PDF:</p>
+    {{ pdf.id }}
+    <a href="{% url 'downloadpdf' pdf.id %}">Download PDF</a>
+    <p>came here</p>
+</body>
+</html>

@@ -196,3 +196,92 @@ def create_apikey():
 # d = {'a':1, 'b':2}
 # encoded_string = json.dumps(d).encode('utf-8')
 # print(encoded_string, type(encoded_string))
+
+# s = "1.00"
+# print(s.split('.')[0])
+# print(int(float(s))) 
+# import numpy as np
+
+# arr_2d = np.array([
+#     [1, 2, 3], 
+#     [4, 5, 6], 
+#     [7, 8, 9]]
+#     )
+# max_axis_0 = np.max(arr_2d, axis=0)  # Maximum along columns
+# max_axis_1 = np.max(arr_2d, axis=1)  # Maximum along rows
+
+# print(max_axis_0)
+# print(max_axis_1)
+
+# print(bin(12))
+data = [
+        {
+            "id": 39,
+            "day": "TUESDAY",
+            "start_time": "00:00:00",
+            "end_time": "00:00:00",
+            "of_company": 3,
+            "company": "laptop"
+        },
+        {
+            "id": 40,
+            "day": "WEDNESDAY",
+            "start_time": "19:00:00",
+            "end_time": "00:00:00",
+            "of_company": 3,
+            "company": "laptop"
+        },
+        {
+            "id": 41,
+            "day": "THURSDAY",
+            "start_time": "18:00:00",
+            "end_time": "00:00:00",
+            "of_company": 3,
+            "company": "laptop"
+        },
+        {
+            "id": 42,
+            "day": "FRIDAY",
+            "start_time": "18:00:00",
+            "end_time": "00:00:00",
+            "of_company": 3,
+            "company": "laptop"
+        },
+        {
+            "id": 43,
+            "day": "SATURDAY",
+            "start_time": "18:00:00",
+            "end_time": "00:00:00",
+            "of_company": 3,
+            "company": "laptop"
+        },
+        {
+            "id": 44,
+            "day": "SUNDAY",
+            "start_time": "20:00:00",
+            "end_time": "00:00:00",
+            "of_company": 3,
+            "company": "laptop"
+        }
+    ]
+records = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"]
+data.sort(key=lambda v:records.index(v["day"]))
+class Class1:
+    def m(self):
+        print("In Class1") 
+       
+class Class2(Class1):
+    def m(self):
+        print("In Class2")
+ 
+class Class3(Class1):
+    def m(self):
+        print("In Class3")  
+        
+class Class4(Class2, Class3):
+    pass  
+     
+# d = Class4()   
+# Class1.m(d)
+pi = 3.14567423424234
+print(float(f"{pi:.5f}"))

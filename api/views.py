@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from .models import User, ChatBotModel, QuestionAndAnswer, SaveChatOneToOneRoomModel, OneToOneChatRoomModel,\
-                    SessionIdStoreModel, ChatStorageWithSessionIdModel
+                    SessionIdStoreModel, ChatStorageWithSessionIdModel, ScidModel
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.views.generic import TemplateView
@@ -32,8 +32,21 @@ import json
 import io
 from io import BytesIO
 from reportlab.pdfgen import canvas
+from rest_framework.generics import GenericAPIView
+from .serializers import GoogleSocialAuthSerializer
+from firebase_admin.messaging import Message, Notification
+from pyfcm import FCMNotification
+from rest_framework.throttling import UserRateThrottle
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
+from django.core.cache import cache
+from datetime import datetime
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
+from api.utils import send_html_mail   
+from django.test import TestCase
+from api.models import SaveCsvFileModel
 
-# Create your views here.
 class GetAllUsers(APIView):
     def get(self, request):
         users = User.objects.all().values()
@@ -148,10 +161,6 @@ class DeleteQuestionsByUser(APIView):
             user_obj.save()
         return Response({"data":None, "message":"deleted succesfully"})
     
-    
-        
-    
-    
 
 class CheckingView(APIView):
     permission_classes = [IsAuthenticated]
@@ -161,7 +170,6 @@ class CheckingView(APIView):
 class LoginUser(TemplateView):
     template_name = 'login.html'
     def post(self,request):
-        print('came to post ')
         email = request.POST['email']
         password = request.POST['password']
         user = authenticate(request, email=email, password=password)
@@ -176,8 +184,8 @@ class ChattingView(TemplateView):
     template_name = "homepage.html"
     def get(self, request, user1, user2):
         if not request.user.is_authenticated:
-            return HttpResponseRedirect(reverse('login'))
-        logged_in_user = User.objects.get(email=request.user)
+            return HttpResponseRedirect(reverse('login2'))
+        logged_in_user = User.objects.get(email=request.user.email)
         sender = logged_in_user.first_name
         try:
             room = OneToOneChatRoomModel.objects.get(room_name=f'chat_{user1}_{user2}')
@@ -187,9 +195,10 @@ class ChattingView(TemplateView):
         return render(request, self.template_name, locals())
         
 class DisplayAllchats(TemplateView):
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
     template_name = "all_chats.html"
     def get(self, request):
+        print(request.user, '--------------------')
         if not request.user.is_authenticated:
             return HttpResponseRedirect(reverse('login'))
         user_id = User.objects.get(email=request.user).id
@@ -206,16 +215,22 @@ class CheckRabbitMqApi(APIView):
 
 class RegistrationApi(APIView):
     def post(self, request):
-        print(request.data, 'came here=======================')
+        start = datetime.now()
         password = request.data['password']
         serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
             x = serializer.save()
             x.set_password(password)
             x.save()
-            # publish_message('user_created', request.data)
-            return Response({'data':serializer.data})
+            # send_html_mail('this is subject', 'this is content', [request.data["email"]])
+            end = datetime.now()
+            return Response({'data':serializer.data, 'time-taken': end-start})
         return Response({"data":serializer.errors})
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from .serializers import UserSerializer  # Import your UserSerializer
+
 
 class UpdateUserAPI(APIView):
     permission_classes = [IsAuthenticated]
@@ -283,14 +298,13 @@ class IsAdminUserView(APIView):
 class LoginUser2(TemplateView):
     template_name = 'login.html'
     def post(self,request):
+        print(request.session.get('counter'), '-------------request.session.get(counter)--------------')
         email = request.POST['email']
         password = request.POST['password']
         user = authenticate(request, email=email, password=password)
         if user:
-            print(user, user.role_of_user, user.id, '=============user=============--------------')
             login(request, user)
             if user.role_of_user == "2":
-                print(22222222222222222, user.id)
                 return HttpResponseRedirect(reverse('customer_all_chats', args=[user.id]))
             elif user.role_of_user == "3":
                 return HttpResponseRedirect(reverse('agentallcustomerchats'))
@@ -323,22 +337,29 @@ class LogoutAgentUser(TemplateView):
         logout(request)
         return render(request, 'logout.html')
     
+class GetAllUsersView(APIView):
+    def get(self, request):
+        print(request.session.get('counter'), '-----------------request.session.get(counter)---------')
+        all_users = User.objects.all().values('first_name', 'email')
+        return Response({'data': all_users, 'message':'all user details'})    
+    
 class GetAllQueuedChatsToAdminView(TemplateView):
     template_name = "all_queued_sessions.html"
     def get(self, request):
+        print(request.user.first_name, '---------------sdasdad--------------')
         if not request.user.is_authenticated:
             return HttpResponseRedirect(reverse('login2'))
         try:
             user = User.objects.get(email=request.user)
         except:
             return HttpResponse('NO USER FOUND==================')    
-        if user.is_superuser:
+        if user.role_of_user == '1':
             queued_sessions = SessionIdStoreModel.objects.filter(is_queued=True)
             all_agents = User.objects.filter(role_of_user='3')
             return render(request, self.template_name, locals())
         else:
             return HttpResponse('no access')
-        
+
 class AdminAssignAgentToUserSessionView(TemplateView):
     template_name = "all_queued_sessions.html"
     def get(self, request, session, user):
@@ -378,10 +399,8 @@ class ChatWithChatbotAndAgentView(TemplateView):
     template_name = "notification.html"
     def get(self, request, user_id, session_id):
         print(request.user, '-------------request.user---------')
-
         if request.user.is_authenticated and (request.user.id == user_id or request.user.role_of_user == '3'):
             profile_picture = request.user.profile_picture
-            print(profile_picture, '------------profile_pictureprofile_pictureprofile_picture-------------')
             get_session_foreign_key = SessionIdStoreModel.objects.get(session_id=session_id)
             get_chat_of_customer_session = ChatStorageWithSessionIdModel.objects.filter(session_id=get_session_foreign_key).values('user_input')
             username_in_chatting = request.user.first_name
@@ -396,71 +415,126 @@ class GetAllCustomerChatsView(TemplateView):
             user = request.user.id
             payload = {'head': request.user.email, 'body': 'your chats fetcheded successfully'}
             user_obj = get_object_or_404(User, pk=request.user.id)
-            send_user_notification(user=user_obj, payload=payload, ttl=1000)
+            # send_user_notification(user=user_obj, payload=payload, ttl=1000)
             print('push notification is implemented-----------------+++++++++++++++')
             return render(request, self.template_name, locals())
         return HttpResponseRedirect(reverse('login2'))
 
 
-class GeneratePDF(APIView):
-    def post(self, request):
-        json_data = request.data
-        # Create a PDF response
-        response = FileResponse(self.create_pdf(json_data))
-        response['Content-Type'] = 'application/pdf'
-        response['Content-Disposition'] = 'inline; filename="output.pdf"'
-        return response
+# class GeneratePDF(APIView):
+#     def post(self, request):
+#         json_data = request.data
+#         # Create a PDF response
+#         response = FileResponse(self.create_pdf(json_data))
+#         response['Content-Type'] = 'application/pdf'
+#         response['Content-Disposition'] = 'inline; filename="output.pdf"'
+#         return response
 
-    def create_pdf(self, json_data):
-        # Create a PDF document
-        buffer = BytesIO()
-        c = canvas.Canvas(buffer, pagesize=letter)
+#     def create_pdf(self, json_data):
+#         # Create a PDF document
+#         buffer = BytesIO()
+#         c = canvas.Canvas(buffer, pagesize=letter)
 
-        # Load JSON data and draw it on the PDF
-        c.drawString(100, 750, "JSON Data:")
-        for key, value in json_data.items():
-            c.drawString(100, 750, f"{key}: {value}")
+#         # Load JSON data and draw it on the PDF
+#         c.drawString(100, 750, "JSON Data:")
+#         for key, value in json_data.items():
+#             c.drawString(100, 750, f"{key}: {value}")
 
-        # Save the PDF
-        c.showPage()
-        c.save()
+#         # Save the PDF
+#         c.showPage()
+#         c.save()
 
-        # Move the buffer's cursor to the beginning
-        buffer.seek(0)
-        return buffer
+#         # Move the buffer's cursor to the beginning
+#         buffer.seek(0)
+#         return buffer
 
-class PDFGenerateView(APIView):
-    def post(self, request):
-        json_data = request.data
-        # Create a PDF response
-        # response = FileResponse(self.create_pdf(json_data))
-        # response['Content-Type'] = 'application/pdf'
-        # response['Content-Disposition'] = 'inline; filename="output.pdf"'
-        response = self.create_pdf(json_data)
-        return response
-    def create_pdf(self, json_data):
-        buffer = io.BytesIO()
-        p = canvas.Canvas(buffer)
-        y = 800
-        for i,j in json_data.items():
-            p.drawString(50, y, f"{i}:- {j}")
-            y -= 20
-        p.showPage()
-        p.save()
-        buffer.seek(0)
-        print(buffer, '-----------------buffer content---------------')
-        with open('new.pdf', 'wb') as file:
-            file.write(buffer.read())
-        return FileResponse(buffer, as_attachment=True)
+# class PDFGenerateView(APIView):
+#     def post(self, request):
+#         json_data = request.data
+#         # Create a PDF response
+#         # response = FileResponse(self.create_pdf(json_data))
+#         # response['Content-Type'] = 'application/pdf'
+#         # response['Content-Disposition'] = 'inline; filename="output.pdf"'
+#         response = self.create_pdf(json_data)
+#         return response
+#     def create_pdf(self, json_data):
+#         buffer = io.BytesIO()
+#         p = canvas.Canvas(buffer)
+#         y = 800
+#         for i,j in json_data.items():
+#             p.drawString(50, y, f"{i}:- {j}")
+#             y -= 20
+#         p.showPage()
+#         p.save()
+#         buffer.seek(0)
+#         print(buffer, '-----------------buffer content---------------')
+#         with open('new.pdf', 'wb') as file:
+#             file.write(buffer.read())
+#         return FileResponse(buffer, as_attachment=True)
     
-from api.utils import send_html_mail   
+
+class GeneratescidQrcode(APIView):
+    def post(self, request):
+        obj = ScidModel.objects.create(scid = request.data['scid'])
+        return Response({'data':'done'})
+    
+class CheckPushNotificationView(APIView):
+    def post(self, request):
+        push_service = FCMNotification(api_key="AAAAsxujhoE:APA91bGgl9ncVQfQB6uNOhgnxDY-mFCeVLSv4BgSBLhxiNeHL2TFykIzl0N44O68uOIC-rxL1ni7oVAK3j3hAUXXXzf-Hn6E40byMG2f1mNXzm-3WVp3t0ZDNXLZvOfcfCMO4wAG4NrR")
+        # Send the notification
+        result = push_service.notify_single_device(
+        registration_id="cULYp3ZuwRaMGAJAnNiDef:APA91bGVZRo0dc74soFjF-L3kHTdss2-cyUULyKOyH2YfaOX5CPz4umbhAFvCUNkRBdzJHTiNLniZXdcLTIAcMohScJLj5fk6JfUGC27J9iIKpwz1gcuZ9Bbjq0kdoRBkP9voCOnhqSL",
+        message_title="message title",
+        message_body="working!!!!!!!!!!!!!!",
+        )
+        return Response({"data":"done"})
+
+        
+class TestingPurposeView(APIView):
+    # throttle_classes = [UserRateThrottle]
+    def get(self, request):
+        users = cache.get('users')
+        if users is None:
+            users = User.objects.all().values()
+            # x = add.delay(11,15)
+            cache.set("users", users, timeout=30)
+        return Response({"data": users, "message": f"all users listing -----", "code":200})
+
+        
 class SendMailsAsynchronouslyView(APIView):
     def get(self, request):
         try:
-            lst = ['ram9014@yopmail.com', 'kane9014@yopmail.com']    
+            lst = ["kane9014@yopmail.com"]
+            start_time = datetime.now()    
             send_html_mail('this is a subject', 'this is a testing mail', lst)
-            return Response({'data':None, 'message':'message sent successfully'})
+            end_time = datetime.now()
+            return Response({'time_taken':str(end_time-start_time), 'message':'message sent successfully'})
         except:
             return Response({'data':None, 'message':'something went wrong'})
         
-     
+class SendMailToRecipients(APIView):
+    def get(self, request):
+        start_time = datetime.now()    
+        recipient_list = ["kane9014@yopmail.com"]
+        context = {'subject': 'this is subbbb', 'html_content':'smfkmfls'}
+        temp = render_to_string('send_mul_mails.html', context)
+        msg = EmailMultiAlternatives(f"this is for testing purpose", temp, settings.DEFAULT_FROM_EMAIL, recipient_list)
+        msg.content_subtype = 'html'
+        msg.send()        
+        end_time = datetime.now()
+        return Response({'time_taken':str(end_time-start_time), 'message':'message sent successfully'})
+    
+class SaveCsvFileView(APIView):
+    def get(self, request):
+        file = request.FILES.get('csv_file')
+        print(file, type(file), '-------------file---------')
+        save_obj = SaveCsvFileModel.objects.create(csv_file = file)
+        return Response({"data":None, "message":"done"})
+    
+class GetCsvFileView(APIView):
+    def get(self, request):
+        get_obj = SaveCsvFileModel.objects.first()
+        print(get_obj.csv_file.path, type(get_obj.csv_file), '---------------obj-----------')
+        with open(get_obj.csv_file.path, 'r') as file:
+            content = file.read()
+        return Response({"data":content, "message":"done"})

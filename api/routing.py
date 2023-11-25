@@ -8,9 +8,9 @@ websocket_urlpatterns = [
 
     path('ws/chatbot/<str:key>/', MyChatBot.as_asgi()),
     path('ws/sync-chatbot/<str:key>/', MySyncChatBot.as_asgi()),
-
     path('ws/async-we-chatbot/<str:key>/', MyAsyncWebsocketConsumer.as_asgi()),
-    #########################
+
+    ############ one to one chatting #############
     path('ws/chatting/<int:user1>/<int:user2>/', UserChattingWithFriendConsumer.as_asgi()),
 
 

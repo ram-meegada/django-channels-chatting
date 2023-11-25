@@ -20,7 +20,7 @@
         var messagesDiv = document.getElementById('messages');
         var messageInput = document.getElementById('messageInput');
         var sendMessageButton = document.getElementById('sendMessageButton');
-        var wsUrl = 'wss://45e6-112-196-43-19.ngrok-free.app/ws/chatting/{{ user1 }}/{{ user2 }}/';
+        var wsUrl = 'ws://127.0.0.1:8000/ws/chatting/{{ user1 }}/{{ user2 }}/';
         var logged_in_user = '{{ sender }}'
         var ws = new WebSocket(wsUrl);
 
@@ -44,7 +44,7 @@
             var message = messageInput.value;
             if (message.trim() !== '') {
                 ws.send(message);
-                messageInput.value = ''; // Clear the input field
+                messageInput.value = ''; 
             }
         });
 

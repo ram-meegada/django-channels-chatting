@@ -16,26 +16,32 @@
         <input type="text" id="messageInput" placeholder="Enter your message">
         <button id="sendMessageButton">Send Message</button>
     </div>
+    <a href="http://127.0.0.1:8000/testing/">click me</a>
 
     <script>
         var messagesDiv = document.getElementById('messages');
         var messageInput = document.getElementById('messageInput');
         var sendMessageButton = document.getElementById('sendMessageButton');
-        var wsUrl = 'ws://127.0.0.1:8000/ws/agentuserchatting/{{ user_id }}/abc/{{ session_id }}/';
+        // var wsUrl = 'wss://b36e-112-196-43-19.ngrok-free.app/ws/agentuserchatting/{{ user_id }}/abc/{{ session_id }}/';
+        var wsUrl = 'ws://127.0.0.1:8000/ws/openaiagentuser/{{ user_id }}/{{ session_id }}/';
         var ws = new WebSocket(wsUrl);
         
         ws.onopen = function() {
             appendMessage('connection established');
-        };
+        };appendMessage
 
         ws.onmessage = function(event) {
+
             if (event.data.includes(':chat_message')) {
                 appendMessage(event.data.slice(0,-13))
             }
-            else{
+            else if (event.data.includes('Bot')) {
                 var jsonData = JSON.parse(event.data);
                 appendMessage('{{username_in_chatting}}' + ':-' + jsonData.customer);
                 appendMessage('Bot:- ' + jsonData.Bot);
+            }
+            else {
+                appendMessage()
             }
         };
 
