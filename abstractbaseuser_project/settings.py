@@ -110,9 +110,9 @@ ASGI_APPLICATION = 'abstractbaseuser_project.asgi.application'
 DATABASES = {
     'default':{
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'channels_db',
+        'NAME': 'user_database',
         'USER': 'postgres',
-        'PASSWORD' : 'apptunix',
+        'PASSWORD' : 'Ramu@123',
         'HOST': 'localhost',
         'PORT' : '5432',
     }
@@ -250,17 +250,16 @@ STRIPE_SECRET_KEY = 'sk_test_51O2SLGSImlUdVW6uwpqy0AbiPHY2cU06bdFQdyETYZio9LhCv8
  
 FCM_APIKEY = "AAAAsxujhoE:APA91bGgl9ncVQfQB6uNOhgnxDY-mFCeVLSv4BgSBLhxiNeHL2TFykIzl0N44O68uOIC-rxL1ni7oVAK3j3hAUXXXzf-Hn6E40byMG2f1mNXzm-3WVp3t0ZDNXLZvOfcfCMO4wAG4NrR"
  
-CSRF_TRUSTED_ORIGINS = [
+CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',  
-    'https://2270-112-196-43-19.ngrok-free.app'
 ]
 CORS_ALLOW_ALL_HEADERS = True
-CACHES = {
-    'default': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': 'redis://127.0.0.1:9944/1',
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-        }
-    }
-}
+# CACHES = {
+#     'default': {
+#         'BACKEND': 'django_redis.cache.RedisCache',
+#         'LOCATION': 'redis://127.0.0.1:9944/1',
+#         'OPTIONS': {
+#             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+#         }
+#     }
+# }

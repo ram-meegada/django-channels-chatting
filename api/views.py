@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from .models import User, ChatBotModel, QuestionAndAnswer, SaveChatOneToOneRoomModel, OneToOneChatRoomModel,\
-                    SessionIdStoreModel, ChatStorageWithSessionIdModel, ScidModel
+                    SessionIdStoreModel, ChatStorageWithSessionIdModel
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.views.generic import TemplateView
@@ -493,12 +493,12 @@ class CheckPushNotificationView(APIView):
 class TestingPurposeView(APIView):
     # throttle_classes = [UserRateThrottle]
     def get(self, request):
-        users = cache.get('users')
-        if users is None:
-            users = User.objects.all().values()
+        # users = cache.get('users')
+        # if users is None:
+        #     users = User.objects.all().values()
             # x = add.delay(11,15)
-            cache.set("users", users, timeout=30)
-        return Response({"data": users, "message": f"all users listing -----", "code":200})
+            # cache.set("users", users, timeout=30)
+        return Response({"data": random.randint(10000, 99999), "message": "random number", "code":200})
 
         
 class SendMailsAsynchronouslyView(APIView):

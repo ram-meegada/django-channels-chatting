@@ -198,22 +198,22 @@ class ImgToPdfModel(models.Model):
         return self.image.name
 
 
-class ScidModel(models.Model):
-    scid = models.CharField(null=True, blank=True)
-    qr_code = models.ImageField(upload_to="qr_codes/", null=True, blank=True)
-    def save(self,*args,**kwargs):
-        # url = f'http://127.0.0.1:8000/qrcode/{self.product_name}/'
-        url=f'{self.scid}'
-        # lst = [self.product_name, self.cost, self.sale_price]
-        qrcode_img=qrcode.make(url)
-        canvas=Image.new("RGB", (300,300),"white")
-        draw=ImageDraw.Draw(canvas)
-        canvas.paste(qrcode_img)
-        buffer=BytesIO()
-        canvas.save(buffer,"PNG")
-        self.qr_code.save(f'image{random.randint(0,9999)}.png',File(buffer),save=False)
-        canvas.close()
-        super(ScidModel, self).save(*args,**kwargs)
+# class ScidModel(models.Model):
+#     scid = models.CharField(max_length=100, null=True, blank=True)
+#     qr_code = models.ImageField(upload_to="qr_codes/", null=True, blank=True)
+#     def save(self,*args,**kwargs):
+#         # url = f'http://127.0.0.1:8000/qrcode/{self.product_name}/'
+#         url=f'{self.scid}'
+#         # lst = [self.product_name, self.cost, self.sale_price]
+#         qrcode_img=qrcode.make(url)
+#         canvas=Image.new("RGB", (300,300),"white")
+#         draw=ImageDraw.Draw(canvas)
+#         canvas.paste(qrcode_img)
+#         buffer=BytesIO()
+#         canvas.save(buffer,"PNG")
+#         self.qr_code.save(f'image{random.randint(0,9999)}.png',File(buffer),save=False)
+#         canvas.close()
+#         super(ScidModel, self).save(*args,**kwargs)
 
 
 class SaveCsvFileModel(models.Model):
