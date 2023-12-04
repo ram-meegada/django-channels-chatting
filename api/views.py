@@ -1,6 +1,5 @@
 from django.shortcuts import render
-from .models import User, ChatBotModel, QuestionAndAnswer, SaveChatOneToOneRoomModel, OneToOneChatRoomModel,\
-                    SessionIdStoreModel, ChatStorageWithSessionIdModel
+from .models import User, ChatBotModel, QuestionAndAnswer, SaveChatOneToOneRoomModel,       OneToOneChatRoomModel, SessionIdStoreModel, ChatStorageWithSessionIdModel
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.views.generic import TemplateView
@@ -46,6 +45,8 @@ from django.template.loader import render_to_string
 from api.utils import send_html_mail   
 from django.test import TestCase
 from api.models import SaveCsvFileModel
+import logging
+logger = logging.getLogger(__name__)
 
 class GetAllUsers(APIView):
     def get(self, request):
@@ -493,20 +494,21 @@ class CheckPushNotificationView(APIView):
 class TestingPurposeView(APIView):
     # throttle_classes = [UserRateThrottle]
     def get(self, request):
+        start_time = datetime.now()
         # users = cache.get('users')
         # if users is None:
-        #     users = User.objects.all().values()
+        users = User.objects.all().values()
             # x = add.delay(11,15)
             # cache.set("users", users, timeout=30)
-        return Response({"data": random.randint(10000, 99999), "message": "random number", "code":200})
+        end_time = datetime.now()
+        return Response({"data": users, "message": "random number", "code":200, "time-taken": end_time-start_time})
 
-        
 class SendMailsAsynchronouslyView(APIView):
     def get(self, request):
         try:
             lst = ["kane9014@yopmail.com"]
             start_time = datetime.now()    
-            send_html_mail('this is a subject', 'this is a testing mail', lst)
+            send_html_mail('this is a subject', 'this is asynchronous testing mail22222', lst)
             end_time = datetime.now()
             return Response({'time_taken':str(end_time-start_time), 'message':'message sent successfully'})
         except:
@@ -514,7 +516,7 @@ class SendMailsAsynchronouslyView(APIView):
         
 class SendMailToRecipients(APIView):
     def get(self, request):
-        start_time = datetime.now()    
+        start_time = datetime.now()
         recipient_list = ["kane9014@yopmail.com"]
         context = {'subject': 'this is subbbb', 'html_content':'smfkmfls'}
         temp = render_to_string('send_mul_mails.html', context)
@@ -524,17 +526,19 @@ class SendMailToRecipients(APIView):
         end_time = datetime.now()
         return Response({'time_taken':str(end_time-start_time), 'message':'message sent successfully'})
     
+import pandas as pd    
 class SaveCsvFileView(APIView):
-    def get(self, request):
+    def post(self, request):
         file = request.FILES.get('csv_file')
-        print(file, type(file), '-------------file---------')
-        save_obj = SaveCsvFileModel.objects.create(csv_file = file)
+        content = pd.read_csv(file)
+        df_no_duplicates = content.drop_duplicates()
+        df_no_duplicates.to_csv()
+        save_obj = SaveCsvFileModel.objects.create(csv_file = df_no_duplicates)
         return Response({"data":None, "message":"done"})
     
 class GetCsvFileView(APIView):
     def get(self, request):
-        get_obj = SaveCsvFileModel.objects.first()
-        print(get_obj.csv_file.path, type(get_obj.csv_file), '---------------obj-----------')
+        get_obj = SaveCsvFileModel.objects.last()
         with open(get_obj.csv_file.path, 'r') as file:
-            content = file.read()
+            content = pd.read_csv(file)
         return Response({"data":content, "message":"done"})

@@ -218,3 +218,11 @@ class ImgToPdfModel(models.Model):
 
 class SaveCsvFileModel(models.Model):
     csv_file = models.FileField(upload_to="csv_files", null=True, blank=True)        
+
+class RandomModel(models.Model):
+    name = models.CharField(max_length=255, null=True, blank=True)
+    class Meta:
+        db_table = "random_model"
+        indexes = [
+            models.Index(fields=['id'])
+        ]

@@ -112,7 +112,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'user_database',
         'USER': 'postgres',
-        'PASSWORD' : 'Ramu@123',
+        'PASSWORD' : 'apptunix',
         'HOST': 'localhost',
         'PORT' : '5432',
     }
@@ -263,3 +263,22 @@ CORS_ALLOW_ALL_HEADERS = True
 #         }
 #     }
 # }
+
+# settings.py
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    },
+}
