@@ -59,4 +59,5 @@ urlpatterns = [
 
     path('upload-csv-file/', SaveCsvFileView.as_view(), name='save_csv'),
     path('get-csv-file/', GetCsvFileView.as_view(), name='get-csv'),
+    path('send-mail-celery/', SendMailCeleryView.as_view(), name='celery'),
 ]

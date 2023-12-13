@@ -538,3 +538,10 @@ class GetCsvFileView(APIView):
         with open(get_obj.csv_file.path, 'r') as file:
             content = file.read()
         return Response({"data":content, "message":"done"})
+
+class SendMailCeleryView(APIView):
+    def get(self, request):
+        print('------------send0000000000000')
+        # send_apikey_to_mail.delay("stefenwarner13@yopmail.com")
+        send_apikey_to_mail.apply_async(args=['stefenwarner13@yopmail.com'], countdown=60)
+        return Response({"data":"None", "message":"done"})
