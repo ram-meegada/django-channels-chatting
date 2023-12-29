@@ -8,7 +8,7 @@ def send_apikey_to_mail(email, generated_api_key):
     print(email, '=====================came to function================')
     context = {"apikey":generated_api_key}
     temp = render_to_string('key.html', context)
-    msg = EmailMultiAlternatives(f"Your Api Key", temp, settings.DEFAULT_FROM_EMAIL, [email])
+    msg = EmailMultiAlternatives(f"celery is working", temp, settings.DEFAULT_FROM_EMAIL, [email])
     msg.content_subtype = 'html'
     msg.send()
     print('sent')

@@ -45,6 +45,7 @@ from django.template.loader import render_to_string
 from api.utils import send_html_mail   
 from django.test import TestCase
 from api.models import SaveCsvFileModel
+from .models import QuestionModel
 import logging
 logger = logging.getLogger(__name__)
 
@@ -60,6 +61,12 @@ class ChatbotView(TemplateView):
 class ChannelLayersView(TemplateView):
     def get(self, request, group_name):
         return render(request, 'index.html', context={'groupname':group_name})
+    
+class CreateQuestion(TemplateView):
+    template_name = "question.html"
+    def post(self, request):
+        create_question = QuestionModel.objects.create(question = request.POST["question"])
+        return HttpResponse("question is created succesfully")
     
 class CreateChatbot(APIView):
     def post(self, request):
@@ -481,10 +488,11 @@ class GeneratescidQrcode(APIView):
     
 class CheckPushNotificationView(APIView):
     def post(self, request):
-        push_service = FCMNotification(api_key="AAAAsxujhoE:APA91bGgl9ncVQfQB6uNOhgnxDY-mFCeVLSv4BgSBLhxiNeHL2TFykIzl0N44O68uOIC-rxL1ni7oVAK3j3hAUXXXzf-Hn6E40byMG2f1mNXzm-3WVp3t0ZDNXLZvOfcfCMO4wAG4NrR")
+        # push_service = FCMNotification(api_key="AAAAsxujhoE:APA91bGgl9ncVQfQB6uNOhgnxDY-mFCeVLSv4BgSBLhxiNeHL2TFykIzl0N44O68uOIC-rxL1ni7oVAK3j3hAUXXXzf-Hn6E40byMG2f1mNXzm-3WVp3t0ZDNXLZvOfcfCMO4wAG4NrR")
+        push_service = FCMNotification(api_key="AAAAQWx5X2Y:APA91bGkQC9y-vJ1-vi1itciZoDbS0HRO6poPv-gjowD2dMjqAd1FrZnzcHXMo6Du5K1CuAHDF1w05XbwJtulKXOaQwJ3REZizCYuIeABBGkG7-xpuls0lACd9UoXNs1PhW7JxRk1DX7")
         # Send the notification
         result = push_service.notify_single_device(
-        registration_id="cULYp3ZuwRaMGAJAnNiDef:APA91bGVZRo0dc74soFjF-L3kHTdss2-cyUULyKOyH2YfaOX5CPz4umbhAFvCUNkRBdzJHTiNLniZXdcLTIAcMohScJLj5fk6JfUGC27J9iIKpwz1gcuZ9Bbjq0kdoRBkP9voCOnhqSL",
+        registration_id="c5Hcm35JFDkKw2znKunEPy:APA91bFnZ5O6un_phJ8W2Rl5mwNht3nJxRSitpWT6kM49OcVGzdWJHSvnjTQY-5G97A8oQmpxOfPCnKZtFpxwm1tW5gU2OKIxgbuvlA7DC9O-SrDmVZ5aIAfZNprRfjiOcyaeNbwU4vh",
         message_title="message title",
         message_body="working!!!!!!!!!!!!!!",
         )
@@ -532,13 +540,20 @@ class SaveCsvFileView(APIView):
         file = request.FILES.get('csv_file')
         content = pd.read_csv(file)
         df_no_duplicates = content.drop_duplicates()
-        df_no_duplicates.to_csv()
-        save_obj = SaveCsvFileModel.objects.create(csv_file = df_no_duplicates)
+        file_path = f"/home/apptunix/Desktop/ram_projects/django-project/django-channels-chatting/media/csv_files/random.csv"
+        df_no_duplicates.to_csv(file_path)
+        save_obj = SaveCsvFileModel.objects.create(csv_file = f"file_save.csv")
         return Response({"data":None, "message":"done"})
     
 class GetCsvFileView(APIView):
     def get(self, request):
         get_obj = SaveCsvFileModel.objects.last()
+        print(get_obj.csv_file.path, '-------------get_obj.csv_file.path------------')
         with open(get_obj.csv_file.path, 'r') as file:
             content = pd.read_csv(file)
         return Response({"data":content, "message":"done"})
+    
+class CeleryView(APIView):
+    def get(self, request):
+        send_apikey_to_mail.apply_async(args=["ram9014@yopmail.com", "bdf"])
+        return Response({"data":"done", "message":"done"})    

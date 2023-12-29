@@ -226,3 +226,7 @@ class RandomModel(models.Model):
         indexes = [
             models.Index(fields=['id'])
         ]
+
+class QuestionModel(models.Model):
+    question = models.CharField(max_length=255, blank=True, null=True)
+    

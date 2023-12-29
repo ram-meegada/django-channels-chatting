@@ -115,7 +115,7 @@ DATABASES = {
         'PASSWORD' : 'apptunix',
         'HOST': 'localhost',
         'PORT' : '5432',
-    }
+    },   
 }
 
 SIMPLE_JWT = {

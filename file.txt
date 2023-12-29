@@ -79,6 +79,7 @@ oauthlib==3.2.2
 openai==1.3.4
 opt-einsum==3.3.0
 packaging==23.1
+pandas==2.0.3
 pdf-mail==3.0.0
 pika==1.3.2
 pikepdf==8.7.1

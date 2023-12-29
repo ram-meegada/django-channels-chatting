@@ -292,3 +292,5 @@ n = datetime.now()
 original = datetime.strptime(str(n), "%Y-%m-%d %H:%M:%S.%f")
 formatted_string = original.isoformat()
 print(original)
+
+get_product = MerchantProductModel.objects.get(id = )

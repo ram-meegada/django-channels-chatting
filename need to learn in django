@@ -1,4 +1,7 @@
+working with multiple databases in django
 DSA in python
+low level and high level desing
+read csv
 **docker
 Caching
 multi-threading in python
@@ -7,7 +10,6 @@ kubenetes
 make website available to only selected connection
 learn aws basics
 learn about custom middleware in (channels and drf)
-working with multiple databases in django
 stripe payment gateway
 javascript
 api rate limit
@@ -16,3 +18,16 @@ send pdf, image, docs through email automation in django :- done
 apps like music player, (file conversions:-done)
 push notification implementation(done)
 real-time data using channels
+signals in django
+
+# AWS #
+lambda functions in aws
+RDS database
+s3,
+Ec2 instances
+KMS
+cloud watch
+apache nginx
+dynamo db
+elastic beam stack
+cicd pipeline
