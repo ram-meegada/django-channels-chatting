@@ -557,3 +557,147 @@ class CeleryView(APIView):
     def get(self, request):
         send_apikey_to_mail.apply_async(args=["ram9014@yopmail.com", "bdf"])
         return Response({"data":"done", "message":"done"})    
+    
+
+
+def post(self, request, format=None):
+        try:
+            # Check if 'csv_file' is present in the request.FILES
+            if 'csv_file' not in request.FILES:
+                raise ValueError("CSV file is missing in the request.")
+
+            file = request.FILES['csv_file']
+            # content = pd.read_csv(file) 
+            content = pd.read_excel(file, engine='openpyxl')
+            df_no_duplicates = content.drop_duplicates()
+            print(df_no_duplicates, '--------------df_no_duplicates------------')
+            # df_no_duplicates = pd.read_excel(file).drop_duplicates()
+            # df_no_duplicates.columns = df_no_duplicates.columns.str.lower()
+            # mortgage_lender =  df_no_duplicates[['mortgage lender']]
+            # mortgage_lender.columns = ['lender']
+            # print(mortgage_lender, '----------mortgage_lender-----------')
+            # collateral_type =  df_no_duplicates[['collateral type']]
+            # collateral_type.columns = ['collateral_type']
+            # origination_date =  df_no_duplicates[['origination date']]
+            # origination_date.columns = ['origination_date']
+            # print(origination_date, type(origination_date), '-------------origination_date------------')
+            # maturity_date =  df_no_duplicates[['maturity date']]
+            # maturity_date.columns = ['maturity_date']
+            # print(df_no_duplicates.columns, type(df_no_duplicates.columns), '===========df_no_duplicates==============')
+            # Handle Foreign Keys 
+            df_no_duplicates.rename(columns={"MORTGAGE LENDER": "lender_id"}, inplace=True)
+            df_no_duplicates.rename(columns={"BORROWER": "borrower_id"}, inplace=True)
+            df_no_duplicates.rename(columns={"COLLATERAL TYPE": "collateral_type_id"}, inplace=True)
+            df_no_duplicates.rename(columns={"ORIG. LOAN AMOUNT": "loan_amount"}, inplace=True)
+            df_no_duplicates.rename(columns={"ORIGINATION DATE": "origination_date"}, inplace=True)
+            df_no_duplicates.rename(columns={"MATURITY DATE": "maturity_date"}, inplace=True)
+            df_no_duplicates.rename(columns={"ADDRESS": "street_address"}, inplace=True)
+            df_no_duplicates.rename(columns={"CITY": "city"}, inplace=True)
+            df_no_duplicates.rename(columns={"STATE": "state_id"}, inplace=True)
+            df_no_duplicates.rename(columns={"COUNTY": "county"}, inplace=True)
+            print(df_no_duplicates.columns, '================df_no_duplicates.columnsdf_no_duplicates.columns-=======')
+            print(df_no_duplicates['maturity_date'], '================df_no_duplicates.columnsdf_no_duplicates.columns-=======')
+            print(df_no_duplicates['origination_date'], '================df_no_duplicates.columnsdf_no_duplicates.columns-=======')
+
+            df_no_duplicates['loan_amount'] = df_no_duplicates['loan_amount'].replace('[\$,]', '', regex=True).astype(float)
+            df_no_duplicates = df_no_duplicates.rename(columns={'orgination_date': 'origination_date'})
+            borrower_data = df_no_duplicates[['borrower_id']].to_dict(orient='records')
+            county = df_no_duplicates[['county']].to_dict(orient='records')
+            mortgage_lender_data = df_no_duplicates[['lender_id']].to_dict(orient='records')
+            state_data = df_no_duplicates[['state_id']].to_dict(orient='records')
+            collateral_data = df_no_duplicates[['collateral_type_id']].to_dict(orient='records')
+            df_no_duplicates['origination_date'] = pd.to_datetime(df_no_duplicates['origination_date'], format='%d/%m/%y', errors='coerce')
+            df_no_duplicates['origination_date'] = pd.to_datetime(df_no_duplicates['origination_date'], format='%d/%m/%y').dt.strftime('%Y-%m-%d %H:%M:%S.%f%z').fillna('1970-01-01 00:00:00.000000+0000')
+            df_no_duplicates['maturity_date'] = pd.to_datetime(df_no_duplicates['maturity_date'], format='%d/%m/%y', errors='coerce')
+            df_no_duplicates['maturity_date'] = pd.to_datetime(df_no_duplicates['maturity_date'], format='%d/%m/%y').dt.strftime('%Y-%m-%d %H:%M:%S.%f%z').fillna('2050-01-01 00:00:00.000000+0000')
+            print(borrower_data, type(borrower_data), "------borrower_data-----borrower_data--------------")
+            with transaction.atomic():
+                existing_borrowers = set(Borrowers.objects.values_list('borrower', flat=True))
+                result_records = []
+                for i in borrower_data:
+                    if i not in result_records:
+                        result_records.append(i)
+                new_borrower_instances = [Borrowers(borrower=data['borrower_id']) for data in result_records if data['borrower_id'] not in existing_borrowers]
+                borrower_instances = Borrowers.objects.bulk_create(new_borrower_instances)
+
+
+                existing_states = set(StateRealEstate.objects.values_list('state', flat=True))
+                state_result_records = []
+                for i in state_data:
+                    if i not in state_result_records:
+                        state_result_records.append(i)
+                new_state_instances = [StateRealEstate(state=data['state_id']) for data in state_result_records if data['state_id'] not in existing_states]
+                state_instances = StateRealEstate.objects.bulk_create(new_state_instances)
+                
+                existing_lenders = set(MortgageLender.objects.values_list('lender', flat=True))
+                lender_result_records = []
+                for i in mortgage_lender_data:
+                    if i not in lender_result_records:
+                        lender_result_records.append(i)
+                new_lender_instances = [MortgageLender(lender=data['lender_id']) for data in lender_result_records if data['lender_id'] not in existing_lenders]
+                print(new_lender_instances, '-------------new_lender_instances-------new_lender_instances-----------')
+                mortgage_lender_instances = MortgageLender.objects.bulk_create(new_lender_instances)
+                
+                existing_collaterals = set(CollateralModel.objects.values_list('collateral_type', flat=True))
+                collateral_result_records = []
+                for i in collateral_data:
+                    if i not in collateral_result_records:
+                        collateral_result_records.append(i)
+                new_collateral_instances = [CollateralModel(collateral_type=data['collateral_type_id']) for data in collateral_result_records if data['collateral_type_id'] not in existing_collaterals]
+                collateral_instances = CollateralModel.objects.bulk_create(new_collateral_instances)
+
+
+            # Create Records in CommercialRealEstate
+            commercial_real_estate_data = df_no_duplicates.to_dict(orient='records')
+            # print(commercial_real_estate_data, '-----------commercial_real_estate_data-----------------**********')
+            with transaction.atomic():
+                for data in commercial_real_estate_data:
+                    # check_lenders = MortgageLender.objects.filter(lender=data['lender'])
+                    # if len(check_lenders) > 1:
+                    #     check_lenders.delete()
+                    # check_collateral_type = CollateralModel.objects.filter(collateral_type=data['collateral_type'])
+                    # if len(check_collateral_type) > 1:
+                    #     check_collateral_type.delete()
+                    # check_borrowers = Borrowers.objects.filter(borrower=data['borrower'])
+                    # if len(check_borrowers) > 1:
+                    #     check_borrowers.delete()
+                    # Use get_or_create to ensure the foreign key instance exists
+                    try:
+                        data['borrower_id'] = Borrowers.objects.get(borrower=data['borrower_id']).id
+                    except:
+                        obj = Borrowers.objects.create(borrower=data['borrower_id'])
+                        data['borrower_id'] = obj.id
+                    # data['borrower'], _ = Borrowers.objects.get_or_create(borrower=data['borrower'])
+                    try:
+                        data['lender_id'] = MortgageLender.objects.get(lender=data['lender_id']).id
+                    except:
+                        obj = MortgageLender.objects.create(lender=data['lender_id'])    
+                        data['lender_id'] = obj.id
+                    # data['lender'] = MortgageLender.objects.create(lender=data['lender'])
+                    state_instance = StateRealEstate.objects.filter(state=data['state_id']).first()
+
+                    if state_instance:
+                        data['state_id'] = state_instance.id
+                    else:
+                        data['state_id'] = StateRealEstate.objects.create(state=data['state_id']).id
+                    try:    
+                        data['collateral_type_id'] = CollateralModel.objects.get(collateral_type=data['collateral_type_id']).id
+                    except:
+                        data['collateral_type_id'] = CollateralModel.objects.create(collateral_type=data['collateral_type_id']).id    
+                print(commercial_real_estate_data[0]["origination_date"], '---------type of date---------')        
+                print(commercial_real_estate_data, 33333333333333333333333)    
+                CommercialRealEstate.objects.bulk_create([CommercialRealEstate(**data) for data in commercial_real_estate_data])
+                print(4444444444444444444444)
+
+            result = {"data": None, "message": "done", "code": status.HTTP_200_OK}
+            return Response(result, status=status.HTTP_200_OK)
+
+        except ValueError as ve:
+            print(f"ValueError: {ve}")
+            result = {"data": None, "message": str(ve)}
+            return Response(result, status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
+            result = {"data": None, "message": "Internal Server Error"}
+            return Response(result, status=status.HTTP_500_INTERNAL_SERVER_ERROR)    
