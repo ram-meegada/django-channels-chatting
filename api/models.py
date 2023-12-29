@@ -230,3 +230,61 @@ class RandomModel(models.Model):
 class QuestionModel(models.Model):
     question = models.CharField(max_length=255, blank=True, null=True)
     
+
+
+
+
+class Borrowers(models.Model):
+    id = models.AutoField(primary_key=True)
+    borrower = models.CharField(max_length=150, blank=True, null=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
+    deleted_at = models.DateTimeField(blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    is_deleted = models.BooleanField(default=False)
+    can_delete = models.BooleanField(default=True)
+
+class MortgageLender(models.Model):
+    id = models.AutoField(primary_key=True)
+    lender = models.CharField(max_length=150, blank=True, null=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
+    deleted_at = models.DateTimeField(blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    is_deleted = models.BooleanField(default=False)
+    can_delete = models.BooleanField(default=True)
+
+class CollateralModel(models.Model):
+    id = models.AutoField(primary_key=True)
+    collateral_type = models.CharField(max_length=150, blank=True, null=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
+    deleted_at = models.DateTimeField(blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    is_deleted = models.BooleanField(default=False)
+    can_delete = models.BooleanField(default=True)    
+
+class StateRealEstate(models.Model):
+    id = models.AutoField(primary_key=True)
+    state = models.CharField(max_length=150, blank=True, null=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
+    deleted_at = models.DateTimeField(blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    is_deleted = models.BooleanField(default=False)
+    can_delete = models.BooleanField(default=True)    
+class CommercialRealEstate(models.Model):
+    id = models.AutoField(primary_key=True)
+    loan_amount = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    borrower = models.ForeignKey(Borrowers, on_delete=models.CASCADE, blank=True, null=True)
+    lender = models.ForeignKey(MortgageLender, on_delete=models.CASCADE, blank=True, null=True)
+    origination_date = models.DateTimeField(default=timezone.now, blank=True, null=True)
+    maturity_date = models.DateTimeField(default=timezone.now, blank=True, null=True)
+    collateral_type = models.ForeignKey(CollateralModel, on_delete=models.CASCADE, blank=True, null=True)
+    street_address  = models.CharField(max_length=200, blank=True, null=True)
+    city  = models.CharField(max_length=200, blank=True, null=True)
+    state  = models.ForeignKey(StateRealEstate, on_delete=models.CASCADE, blank=True, null=True)
+    notes = models.TextField()
+    notes_created_at = models.DateTimeField(default=timezone.now) 
+    county = models.CharField(max_length=200, blank=True, null=True)
+    is_booked = models.BooleanField(default=False, blank=True, null=True)    
