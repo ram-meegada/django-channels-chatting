@@ -284,4 +284,13 @@ class Class4(Class2, Class3):
 # d = Class4()   
 # Class1.m(d)
 pi = 3.14567423424234
-print(float(f"{pi:.5f}"))
+# print(float(f"{pi:.5f}"))
+from datetime import datetime
+import pytz
+
+n = datetime.now()
+original = datetime.strptime(str(n), "%Y-%m-%d %H:%M:%S.%f")
+formatted_string = original.isoformat()
+print(original)
+
+get_product = MerchantProductModel.objects.get(id = )

@@ -6,6 +6,8 @@ urlpatterns = [
     path('users/', GetAllUsers.as_view()),
     path('chatbot/', ChatbotView.as_view(),name='homepage'),
 
+    path('create-question/', CreateQuestion.as_view(), name="question"),
+
     # one to one chatting
     path('login/', LoginUser.as_view(), name='login'),
     path('user/all-chats/', DisplayAllchats.as_view(), name='all-chats'),
@@ -60,4 +62,8 @@ urlpatterns = [
     path('upload-csv-file/', SaveCsvFileView.as_view(), name='save_csv'),
     path('get-csv-file/', GetCsvFileView.as_view(), name='get-csv'),
     path('send-mail-celery/', SendMailCeleryView.as_view(), name='celery'),
+
+    path('read-csv/', ReadCsvView.as_view(), name='csv'),
+    path('clone-read-csv/', CloneReadCsvView.as_view(), name='clone_csv'),
+    path('threading/', ThreadTestingView.as_view(), name='thread'),
 ]

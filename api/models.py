@@ -55,6 +55,7 @@ class User(AbstractUser):
     password = models.CharField(max_length=255, null=True, blank=True)
     role_of_user = models.CharField(choices=USER_ROLE_CHOICES, default='4', max_length=100)
     bot_subscription = models.IntegerField(blank=True, null=True, help_text="1.six months, 2.one year, 3.two years")
+
     trail_period = models.IntegerField(blank=True, null=True, help_text="1.six months, 2.one year, 3.two years")
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     # auth_provider = models.CharField(
@@ -218,3 +219,120 @@ class ImgToPdfModel(models.Model):
 
 class SaveCsvFileModel(models.Model):
     csv_file = models.FileField(upload_to="csv_files", null=True, blank=True)        
+
+class RandomModel(models.Model):
+    name = models.CharField(max_length=255, null=True, blank=True)
+    class Meta:
+        db_table = "random_model"
+        indexes = [
+            models.Index(fields=['id'])
+        ]
+
+class QuestionModel(models.Model):
+    question = models.CharField(max_length=255, blank=True, null=True)
+    
+
+
+
+
+class Borrowers(models.Model):
+    id = models.AutoField(primary_key=True)
+    borrower = models.CharField(max_length=150, blank=True, null=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
+    deleted_at = models.DateTimeField(blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    is_deleted = models.BooleanField(default=False)
+    can_delete = models.BooleanField(default=True)
+    class Meta:
+        db_table = "borrowers_model"
+        indexes = [
+            models.Index(fields=['borrower'])
+        ]
+
+class MortgageLender(models.Model):
+    id = models.AutoField(primary_key=True)
+    lender = models.CharField(max_length=150, blank=True, null=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
+    deleted_at = models.DateTimeField(blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    is_deleted = models.BooleanField(default=False)
+    can_delete = models.BooleanField(default=True)
+    class Meta:
+        db_table = "lenders_model"
+        indexes = [
+            models.Index(fields=['lender'])
+        ]
+
+class CollateralModel(models.Model):
+    id = models.AutoField(primary_key=True)
+    collateral_type = models.CharField(max_length=150, blank=True, null=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
+    deleted_at = models.DateTimeField(blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    is_deleted = models.BooleanField(default=False)
+    can_delete = models.BooleanField(default=True)    
+    class Meta:
+        db_table = "collateral_model"
+        indexes = [
+            models.Index(fields=['collateral_type'])
+        ]
+
+class StateRealEstate(models.Model):
+    id = models.AutoField(primary_key=True)
+    state = models.CharField(max_length=150, blank=True, null=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
+    deleted_at = models.DateTimeField(blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    is_deleted = models.BooleanField(default=False)
+    can_delete = models.BooleanField(default=True)    
+    class Meta:
+        db_table = "state_model"
+        indexes = [
+            models.Index(fields=['state'])
+        ]
+
+class CommercialRealEstate(models.Model):
+    id = models.AutoField(primary_key=True)
+    loan_amount = models.DecimalField(max_digits=15, decimal_places=2, blank=True, null=True)
+    borrower = models.ForeignKey(Borrowers, on_delete=models.CASCADE, blank=True, null=True)
+    lender = models.ForeignKey(MortgageLender, on_delete=models.CASCADE, blank=True, null=True)
+    origination_date = models.DateTimeField(default=timezone.now, blank=True, null=True)
+    maturity_date = models.DateTimeField(default=timezone.now, blank=True, null=True)
+    collateral_type = models.ForeignKey(CollateralModel, on_delete=models.CASCADE, blank=True, null=True)
+    street_address  = models.CharField(max_length=200, blank=True, null=True)
+    city  = models.CharField(max_length=200, blank=True, null=True)
+    state  = models.ForeignKey(StateRealEstate, on_delete=models.CASCADE, blank=True, null=True)
+    notes = models.TextField()
+    notes_created_at = models.DateTimeField(default=timezone.now) 
+    county = models.CharField(max_length=200, blank=True, null=True)
+    is_booked = models.BooleanField(default=False, blank=True, null=True)    
+    class Meta:
+        db_table = "commercial_realestate_model"
+        indexes = [
+            models.Index(fields=['id'])
+        ]
+
+class CloneCommercialRealEstate(models.Model):
+    id = models.AutoField(primary_key=True)
+    loan_amount = models.DecimalField(max_digits=15, decimal_places=2, blank=True, null=True)
+    borrower = models.CharField(max_length=200, blank=True, null=True)
+    lender = models.CharField(max_length=200, blank=True, null=True)
+    origination_date = models.DateTimeField(default=timezone.now, blank=True, null=True)
+    maturity_date = models.DateTimeField(default=timezone.now, blank=True, null=True)
+    collateral_type = models.CharField(max_length=200, blank=True, null=True)
+    street_address  = models.CharField(max_length=200, blank=True, null=True)
+    city  = models.CharField(max_length=200, blank=True, null=True)
+    state  = models.CharField(max_length=200, blank=True, null=True)
+    notes = models.TextField()
+    notes_created_at = models.DateTimeField(default=timezone.now) 
+    county = models.CharField(max_length=200, blank=True, null=True)
+    is_booked = models.BooleanField(default=False, blank=True, null=True)    
+    class Meta:
+        db_table = "clone_commercial_realestate_model"
+        indexes = [
+            models.Index(fields=['borrower', 'lender'])
+        ]

@@ -58,3 +58,4 @@ class GoogleSocialAuthSerializer(serializers.Serializer):
 
         return register_social_user(
             provider=provider, user_id=user_id, email=email, name=name)        
+    

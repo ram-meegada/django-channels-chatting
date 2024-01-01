@@ -1,6 +1,5 @@
 from django.shortcuts import render
-from .models import User, ChatBotModel, QuestionAndAnswer, SaveChatOneToOneRoomModel, OneToOneChatRoomModel,\
-                    SessionIdStoreModel, ChatStorageWithSessionIdModel
+from .models import User, ChatBotModel, QuestionAndAnswer, SaveChatOneToOneRoomModel,       OneToOneChatRoomModel, SessionIdStoreModel, ChatStorageWithSessionIdModel
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.views.generic import TemplateView
@@ -40,12 +39,19 @@ from rest_framework.throttling import UserRateThrottle
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django.core.cache import cache
-from datetime import datetime
+from datetime import datetime, time
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
-from api.utils import send_html_mail   
+from api.utils import *
 from django.test import TestCase
 from api.models import SaveCsvFileModel
+from .models import QuestionModel
+from api.models import *
+import logging
+from django.db import transaction
+import threading
+
+logger = logging.getLogger(__name__)
 
 class GetAllUsers(APIView):
     def get(self, request):
@@ -59,6 +65,12 @@ class ChatbotView(TemplateView):
 class ChannelLayersView(TemplateView):
     def get(self, request, group_name):
         return render(request, 'index.html', context={'groupname':group_name})
+    
+class CreateQuestion(TemplateView):
+    template_name = "question.html"
+    def post(self, request):
+        create_question = QuestionModel.objects.create(question = request.POST["question"])
+        return HttpResponse("question is created succesfully")
     
 class CreateChatbot(APIView):
     def post(self, request):
@@ -480,10 +492,11 @@ class GeneratescidQrcode(APIView):
     
 class CheckPushNotificationView(APIView):
     def post(self, request):
-        push_service = FCMNotification(api_key="AAAAsxujhoE:APA91bGgl9ncVQfQB6uNOhgnxDY-mFCeVLSv4BgSBLhxiNeHL2TFykIzl0N44O68uOIC-rxL1ni7oVAK3j3hAUXXXzf-Hn6E40byMG2f1mNXzm-3WVp3t0ZDNXLZvOfcfCMO4wAG4NrR")
+        # push_service = FCMNotification(api_key="AAAAsxujhoE:APA91bGgl9ncVQfQB6uNOhgnxDY-mFCeVLSv4BgSBLhxiNeHL2TFykIzl0N44O68uOIC-rxL1ni7oVAK3j3hAUXXXzf-Hn6E40byMG2f1mNXzm-3WVp3t0ZDNXLZvOfcfCMO4wAG4NrR")
+        push_service = FCMNotification(api_key="AAAAQWx5X2Y:APA91bGkQC9y-vJ1-vi1itciZoDbS0HRO6poPv-gjowD2dMjqAd1FrZnzcHXMo6Du5K1CuAHDF1w05XbwJtulKXOaQwJ3REZizCYuIeABBGkG7-xpuls0lACd9UoXNs1PhW7JxRk1DX7")
         # Send the notification
         result = push_service.notify_single_device(
-        registration_id="cULYp3ZuwRaMGAJAnNiDef:APA91bGVZRo0dc74soFjF-L3kHTdss2-cyUULyKOyH2YfaOX5CPz4umbhAFvCUNkRBdzJHTiNLniZXdcLTIAcMohScJLj5fk6JfUGC27J9iIKpwz1gcuZ9Bbjq0kdoRBkP9voCOnhqSL",
+        registration_id="c5Hcm35JFDkKw2znKunEPy:APA91bFnZ5O6un_phJ8W2Rl5mwNht3nJxRSitpWT6kM49OcVGzdWJHSvnjTQY-5G97A8oQmpxOfPCnKZtFpxwm1tW5gU2OKIxgbuvlA7DC9O-SrDmVZ5aIAfZNprRfjiOcyaeNbwU4vh",
         message_title="message title",
         message_body="working!!!!!!!!!!!!!!",
         )
@@ -493,20 +506,21 @@ class CheckPushNotificationView(APIView):
 class TestingPurposeView(APIView):
     # throttle_classes = [UserRateThrottle]
     def get(self, request):
+        start_time = datetime.now()
         # users = cache.get('users')
         # if users is None:
-        #     users = User.objects.all().values()
+        users = User.objects.all().values()
             # x = add.delay(11,15)
             # cache.set("users", users, timeout=30)
-        return Response({"data": random.randint(10000, 99999), "message": "random number", "code":200})
+        end_time = datetime.now()
+        return Response({"data": users, "message": "random number", "code":200, "time-taken": end_time-start_time})
 
-        
 class SendMailsAsynchronouslyView(APIView):
     def get(self, request):
         try:
             lst = ["kane9014@yopmail.com"]
             start_time = datetime.now()    
-            send_html_mail('this is a subject', 'this is a testing mail', lst)
+            send_html_mail('this is a subject', 'this is asynchronous testing mail22222', lst)
             end_time = datetime.now()
             return Response({'time_taken':str(end_time-start_time), 'message':'message sent successfully'})
         except:
@@ -514,7 +528,7 @@ class SendMailsAsynchronouslyView(APIView):
         
 class SendMailToRecipients(APIView):
     def get(self, request):
-        start_time = datetime.now()    
+        start_time = datetime.now()
         recipient_list = ["kane9014@yopmail.com"]
         context = {'subject': 'this is subbbb', 'html_content':'smfkmfls'}
         temp = render_to_string('send_mul_mails.html', context)
@@ -524,19 +538,23 @@ class SendMailToRecipients(APIView):
         end_time = datetime.now()
         return Response({'time_taken':str(end_time-start_time), 'message':'message sent successfully'})
     
+import pandas as pd    
 class SaveCsvFileView(APIView):
-    def get(self, request):
+    def post(self, request):
         file = request.FILES.get('csv_file')
-        print(file, type(file), '-------------file---------')
-        save_obj = SaveCsvFileModel.objects.create(csv_file = file)
+        content = pd.read_csv(file)
+        df_no_duplicates = content.drop_duplicates()
+        file_path = f"/home/apptunix/Desktop/ram_projects/django-project/django-channels-chatting/media/csv_files/random.csv"
+        df_no_duplicates.to_csv(file_path)
+        save_obj = SaveCsvFileModel.objects.create(csv_file = f"file_save.csv")
         return Response({"data":None, "message":"done"})
     
 class GetCsvFileView(APIView):
     def get(self, request):
-        get_obj = SaveCsvFileModel.objects.first()
-        print(get_obj.csv_file.path, type(get_obj.csv_file), '---------------obj-----------')
+        get_obj = SaveCsvFileModel.objects.last()
+        print(get_obj.csv_file.path, '-------------get_obj.csv_file.path------------')
         with open(get_obj.csv_file.path, 'r') as file:
-            content = file.read()
+            content = pd.read_csv(file)
         return Response({"data":content, "message":"done"})
 
 class SendMailCeleryView(APIView):
@@ -545,3 +563,274 @@ class SendMailCeleryView(APIView):
         # send_apikey_to_mail.delay("stefenwarner13@yopmail.com")
         send_apikey_to_mail.apply_async(args=['stefenwarner13@yopmail.com'], countdown=60)
         return Response({"data":"None", "message":"done"})
+
+class ReadCsvView(APIView):
+    def post(self, request, format=None):
+        try:
+            first_start_time = datetime.now()
+            # Check if 'csv_file' is present in the request.FILES
+            if 'csv_file' not in request.FILES:
+                raise ValueError("CSV file is missing in the request.")
+
+            file = request.FILES['csv_file']
+            # content = pd.read_csv(file) 
+            content = pd.read_excel(file, engine='openpyxl')
+            df_no_duplicates = content.drop_duplicates()
+            print(df_no_duplicates, '--------------df_no_duplicates------------')
+            # df_no_duplicates = pd.read_excel(file).drop_duplicates()
+            # df_no_duplicates.columns = df_no_duplicates.columns.str.lower()
+            # mortgage_lender =  df_no_duplicates[['mortgage lender']]
+            # mortgage_lender.columns = ['lender']
+            # print(mortgage_lender, '----------mortgage_lender-----------')
+            # collateral_type =  df_no_duplicates[['collateral type']]
+            # collateral_type.columns = ['collateral_type']
+            # origination_date =  df_no_duplicates[['origination date']]
+            # origination_date.columns = ['origination_date']
+            # print(origination_date, type(origination_date), '-------------origination_date------------')
+            # maturity_date =  df_no_duplicates[['maturity date']]
+            # maturity_date.columns = ['maturity_date']
+            # print(df_no_duplicates.columns, type(df_no_duplicates.columns), '===========df_no_duplicates==============')
+            # Handle Foreign Keys 
+            df_no_duplicates.rename(columns={"MORTGAGE LENDER": "lender_id"}, inplace=True)
+            df_no_duplicates.rename(columns={"BORROWER": "borrower_id"}, inplace=True)
+            df_no_duplicates.rename(columns={"COLLATERAL TYPE": "collateral_type_id"}, inplace=True)
+            df_no_duplicates.rename(columns={"ORIG. LOAN AMOUNT": "loan_amount"}, inplace=True)
+            df_no_duplicates.rename(columns={"ORIGINATION DATE": "origination_date"}, inplace=True)
+            df_no_duplicates.rename(columns={"MATURITY DATE": "maturity_date"}, inplace=True)
+            df_no_duplicates.rename(columns={"ADDRESS": "street_address"}, inplace=True)
+            df_no_duplicates.rename(columns={"CITY": "city"}, inplace=True)
+            df_no_duplicates.rename(columns={"STATE": "state_id"}, inplace=True)
+            df_no_duplicates.rename(columns={"COUNTY": "county"}, inplace=True)
+
+            df_no_duplicates['loan_amount'] = df_no_duplicates['loan_amount'].replace('[\$,]', '', regex=True).astype(float)
+            borrower_data = df_no_duplicates[['borrower_id']].to_dict(orient='records')
+            county = df_no_duplicates[['county']].to_dict(orient='records')
+            mortgage_lender_data = df_no_duplicates[['lender_id']].to_dict(orient='records')
+            state_data = df_no_duplicates[['state_id']].to_dict(orient='records')
+            collateral_data = df_no_duplicates[['collateral_type_id']].to_dict(orient='records')
+            df_no_duplicates['origination_date'] = pd.to_datetime(df_no_duplicates['origination_date'], format='%d/%m/%y', errors='coerce')
+            df_no_duplicates['origination_date'] = pd.to_datetime(df_no_duplicates['origination_date'], format='%d/%m/%y').dt.strftime('%Y-%m-%d %H:%M:%S.%f%z').fillna('1970-01-01 00:00:00.000000+0000')
+            df_no_duplicates['maturity_date'] = pd.to_datetime(df_no_duplicates['maturity_date'], format='%d/%m/%y', errors='coerce')
+            df_no_duplicates['maturity_date'] = pd.to_datetime(df_no_duplicates['maturity_date'], format='%d/%m/%y').dt.strftime('%Y-%m-%d %H:%M:%S.%f%z').fillna('2050-01-01 00:00:00.000000+0000')
+            # print(borrower_data, type(borrower_data), "------borrower_data-----borrower_data--------------")
+            print(datetime.now()- first_start_time, '================fiirst time taken=============')
+            with transaction.atomic():
+                state_time = datetime.now()
+                existing_borrowers = set(Borrowers.objects.values_list('borrower', flat=True))
+                result_records = []
+                for i in borrower_data:
+                    if i not in result_records:
+                        result_records.append(i)
+                new_borrower_instances = [Borrowers(borrower=data['borrower_id']) for data in result_records if data['borrower_id'] not in existing_borrowers]
+                borrower_instances = Borrowers.objects.bulk_create(new_borrower_instances, 1000)
+
+                existing_states = set(StateRealEstate.objects.values_list('state', flat=True))
+                state_result_records = []
+                for i in state_data:
+                    if i not in state_result_records:
+                        state_result_records.append(i)
+                new_state_instances = [StateRealEstate(state=data['state_id']) for data in state_result_records if data['state_id'] not in existing_states]
+                state_instances = StateRealEstate.objects.bulk_create(new_state_instances, 1000)
+                
+                existing_lenders = set(MortgageLender.objects.values_list('lender', flat=True))
+                lender_result_records = []
+                for i in mortgage_lender_data:
+                    if i not in lender_result_records:
+                        lender_result_records.append(i)
+                new_lender_instances = [MortgageLender(lender=data['lender_id']) for data in lender_result_records if data['lender_id'] not in existing_lenders]
+                print(new_lender_instances, '-------------new_lender_instances-------new_lender_instances-----------')
+                mortgage_lender_instances = MortgageLender.objects.bulk_create(new_lender_instances, 1000)
+                
+                existing_collaterals = set(CollateralModel.objects.values_list('collateral_type', flat=True))
+                collateral_result_records = []
+                for i in collateral_data:
+                    if i not in collateral_result_records:
+                        collateral_result_records.append(i)
+                new_collateral_instances = [CollateralModel(collateral_type=data['collateral_type_id']) for data in collateral_result_records if data['collateral_type_id'] not in existing_collaterals]
+                collateral_instances = CollateralModel.objects.bulk_create(new_collateral_instances, 1000)
+
+                print(datetime.now()-state_time, '------------time taken----------------')
+            # Create Records in CommercialRealEstate
+            commercial_real_estate_data = df_no_duplicates.to_dict(orient='records')
+            # print(commercial_real_estate_data, '-----------commercial_real_estate_data-----------------**********')
+            with transaction.atomic():
+                starting_time = datetime.now()
+                for data in commercial_real_estate_data:
+                    # check_lenders = MortgageLender.objects.filter(lender=data['lender'])
+                    # if len(check_lenders) > 1:
+                    #     check_lenders.delete()
+                    # check_collateral_type = CollateralModel.objects.filter(collateral_type=data['collateral_type'])
+                    # if len(check_collateral_type) > 1:
+                    #     check_collateral_type.delete()
+                    # check_borrowers = Borrowers.objects.filter(borrower=data['borrower'])
+                    # if len(check_borrowers) > 1:
+                    #     check_borrowers.delete()
+                    # Use get_or_create to ensure the foreign key instance exists
+                    try:
+                        data['borrower_id'] = Borrowers.objects.get(borrower=data['borrower_id']).id
+                    except:
+                        obj = Borrowers.objects.create(borrower=data['borrower_id'])
+                        data['borrower_id'] = obj.id
+                    # data['borrower'], _ = Borrowers.objects.get_or_create(borrower=data['borrower'])
+                    try:
+                        data['lender_id'] = MortgageLender.objects.get(lender=data['lender_id']).id
+                    except:
+                        obj = MortgageLender.objects.create(lender=data['lender_id'])    
+                        data['lender_id'] = obj.id
+                    # data['lender'] = MortgageLender.objects.create(lender=data['lender'])
+                    state_instance = StateRealEstate.objects.filter(state=data['state_id']).first()
+
+                    if state_instance:
+                        data['state_id'] = state_instance.id
+                    else:
+                        data['state_id'] = StateRealEstate.objects.create(state=data['state_id']).id
+                    try:    
+                        data['collateral_type_id'] = CollateralModel.objects.get(collateral_type=data['collateral_type_id']).id
+                    except:
+                        data['collateral_type_id'] = CollateralModel.objects.create(collateral_type=data['collateral_type_id']).id    
+                CommercialRealEstate.objects.bulk_create([CommercialRealEstate(**data) for data in commercial_real_estate_data], 1000)
+                print(datetime.now() - starting_time, '=====================2nd process time=============')
+            print(datetime.now() - first_start_time, '=====================full process time=============')
+            result = {"data": None, "message": "done", "code": status.HTTP_200_OK}
+            return Response(result, status=status.HTTP_200_OK)
+
+        except ValueError as ve:
+            print(f"ValueError: {ve}")
+            result = {"data": None, "message": str(ve)}
+            return Response(result, status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
+            result = {"data": None, "message": "Internal Server Error"}
+            return Response(result, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+# class ThreadTestingView(APIView):
+#     def get(self, request):
+#         borrowers_thread = CustomThread("get_borrowers")
+#         lenders_thread = CustomThread("get_lenders")
+#         borrowers_thread.start()
+#         lenders_thread.start()
+#         borrowers_thread.join()
+#         lenders_thread.join()
+#         print(borrowers_thread.result, '------------borrowers---------------')
+#         print(lenders_thread.result)
+#         return Response({"data":None, "message":"done"})
+
+class ThreadTestingView(APIView):
+    def get(self, request):
+        borrowers = Borrowers.objects.all()
+        lenders = MortgageLender.objects.all()
+        print(borrowers)
+        print(lenders)
+        return Response({"data":None, "message":"done"})
+    
+class CloneReadCsvView(APIView):
+    def post(self, request, format=None):
+        try:
+            first_start_time = datetime.now()
+            # Check if 'csv_file' is present in the request.FILES
+            if 'csv_file' not in request.FILES:
+                raise ValueError("CSV file is missing in the request.")
+
+            file = request.FILES['csv_file']
+            content = pd.read_excel(file, engine='openpyxl')
+            df_no_duplicates = content.drop_duplicates()
+            df_no_duplicates.rename(columns={"MORTGAGE LENDER": "lender"}, inplace=True)
+            df_no_duplicates.rename(columns={"BORROWER": "borrower"}, inplace=True)
+            df_no_duplicates.rename(columns={"COLLATERAL TYPE": "collateral_type"}, inplace=True)
+            df_no_duplicates.rename(columns={"ORIG. LOAN AMOUNT": "loan_amount"}, inplace=True)
+            df_no_duplicates.rename(columns={"ORIGINATION DATE": "origination_date"}, inplace=True)
+            df_no_duplicates.rename(columns={"MATURITY DATE": "maturity_date"}, inplace=True)
+            df_no_duplicates.rename(columns={"ADDRESS": "street_address"}, inplace=True)
+            df_no_duplicates.rename(columns={"CITY": "city"}, inplace=True)
+            df_no_duplicates.rename(columns={"STATE": "state"}, inplace=True)
+            df_no_duplicates.rename(columns={"COUNTY": "county"}, inplace=True)
+
+            df_no_duplicates['loan_amount'] = df_no_duplicates['loan_amount'].replace('[\$,]', '', regex=True).astype(float)
+            borrower_data = df_no_duplicates[['borrower']].to_dict(orient='records')
+            county = df_no_duplicates[['county']].to_dict(orient='records')
+            mortgage_lender_data = df_no_duplicates[['lender']].to_dict(orient='records')
+            state_data = df_no_duplicates[['state']].to_dict(orient='records')
+            collateral_data = df_no_duplicates[['collateral_type']].to_dict(orient='records')
+            df_no_duplicates['origination_date'] = pd.to_datetime(df_no_duplicates['origination_date'], format='%d/%m/%y', errors='coerce')
+            df_no_duplicates['origination_date'] = pd.to_datetime(df_no_duplicates['origination_date'], format='%d/%m/%y').dt.strftime('%Y-%m-%d %H:%M:%S.%f%z').fillna('1970-01-01 00:00:00.000000+0000')
+            df_no_duplicates['maturity_date'] = pd.to_datetime(df_no_duplicates['maturity_date'], format='%d/%m/%y', errors='coerce')
+            df_no_duplicates['maturity_date'] = pd.to_datetime(df_no_duplicates['maturity_date'], format='%d/%m/%y').dt.strftime('%Y-%m-%d %H:%M:%S.%f%z').fillna('2050-01-01 00:00:00.000000+0000')
+            # print(borrower_data, type(borrower_data), "------borrower_data-----borrower_data--------------")
+            print(datetime.now()- first_start_time, '================fiirst time taken=============')
+            # with transaction.atomic():
+            #     state_time = datetime.now()
+            #     existing_borrowers = set(Borrowers.objects.values_list('borrower', flat=True))
+            #     result_records = []
+            #     for i in borrower_data:
+            #         if i not in result_records:
+            #             result_records.append(i)
+            #     new_borrower_instances = [Borrowers(borrower=data['borrower_id']) for data in result_records if data['borrower_id'] not in existing_borrowers]
+            #     borrower_instances = Borrowers.objects.bulk_create(new_borrower_instances, 1000)
+
+            #     existing_states = set(StateRealEstate.objects.values_list('state', flat=True))
+            #     state_result_records = []
+            #     for i in state_data:
+            #         if i not in state_result_records:
+            #             state_result_records.append(i)
+            #     new_state_instances = [StateRealEstate(state=data['state_id']) for data in state_result_records if data['state_id'] not in existing_states]
+            #     state_instances = StateRealEstate.objects.bulk_create(new_state_instances, 1000)
+                
+            #     existing_lenders = set(MortgageLender.objects.values_list('lender', flat=True))
+            #     lender_result_records = []
+            #     for i in mortgage_lender_data:
+            #         if i not in lender_result_records:
+            #             lender_result_records.append(i)
+            #     new_lender_instances = [MortgageLender(lender=data['lender_id']) for data in lender_result_records if data['lender_id'] not in existing_lenders]
+            #     print(new_lender_instances, '-------------new_lender_instances-------new_lender_instances-----------')
+            #     mortgage_lender_instances = MortgageLender.objects.bulk_create(new_lender_instances, 1000)
+                
+            #     existing_collaterals = set(CollateralModel.objects.values_list('collateral_type', flat=True))
+            #     collateral_result_records = []
+            #     for i in collateral_data:
+            #         if i not in collateral_result_records:
+            #             collateral_result_records.append(i)
+            #     new_collateral_instances = [CollateralModel(collateral_type=data['collateral_type_id']) for data in collateral_result_records if data['collateral_type_id'] not in existing_collaterals]
+            #     collateral_instances = CollateralModel.objects.bulk_create(new_collateral_instances, 1000)
+
+            #     print(datetime.now()-state_time, '------------time taken----------------')
+            # Create Records in CommercialRealEstate
+            commercial_real_estate_data = df_no_duplicates.to_dict(orient='records')
+            with transaction.atomic():
+                starting_time = datetime.now()
+                CloneCommercialRealEstate.objects.bulk_create([CloneCommercialRealEstate(**data) for data in commercial_real_estate_data], 1000)
+            #     for data in commercial_real_estate_data:
+            #         try:
+            #             data['borrower_id'] = Borrowers.objects.get(borrower=data['borrower_id']).id
+            #         except:
+            #             obj = Borrowers.objects.create(borrower=data['borrower_id'])
+            #             data['borrower_id'] = obj.id
+            #         try:
+            #             data['lender_id'] = MortgageLender.objects.get(lender=data['lender_id']).id
+            #         except:
+            #             obj = MortgageLender.objects.create(lender=data['lender_id'])    
+            #             data['lender_id'] = obj.id
+            #         state_instance = StateRealEstate.objects.filter(state=data['state_id']).first()
+
+            #         if state_instance:
+            #             data['state_id'] = state_instance.id
+            #         else:
+            #             data['state_id'] = StateRealEstate.objects.create(state=data['state_id']).id
+            #         try:    
+            #             data['collateral_type_id'] = CollateralModel.objects.get(collateral_type=data['collateral_type_id']).id
+            #         except:
+            #             data['collateral_type_id'] = CollateralModel.objects.create(collateral_type=data['collateral_type_id']).id    
+            #     print(datetime.now() - starting_time, '=====================2nd process time=============')
+            # print(datetime.now() - first_start_time, '=====================full process time=============')
+            result = {"data": None, "message": "done", "code": status.HTTP_200_OK}
+            return Response(result, status=status.HTTP_200_OK)
+
+        except ValueError as ve:
+            print(f"ValueError: {ve}")
+            result = {"data": None, "message": str(ve)}
+            return Response(result, status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
+            result = {"data": None, "message": "Internal Server Error"}
+            return Response(result, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

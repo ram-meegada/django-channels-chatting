@@ -13,7 +13,7 @@ import random
 # nltk.download("wordnet")# word database
 # from spellchecker import SpellChecker
 # from nltk.tag import pos_tag
-from .models import User
+from .models import *
 
 
 # def chatbot_func(newMessage, data, dataframe_pattern_words, ourClasses, ourNewModel):
@@ -231,3 +231,25 @@ class EmailThread(threading.Thread):
 
 def send_html_mail(subject, html_content, recipient_list):
     EmailThread(subject, html_content, recipient_list).start()
+
+
+def get_borrowers():
+    borrowers = Borrowers.objects.all()
+    return borrowers
+
+def get_lenders():
+    lenders = MortgageLender.objects.all()
+    return lenders
+
+class CustomThread(Thread):
+    def __init__(self, task_name):
+        super().__init__()
+        self.task_name = task_name
+
+    def run(self):
+        if self.task_name == "get_borrowers":
+            borrowers = Borrowers.objects.all()
+            self.result = borrowers  
+        elif self.task_name == "get_lenders":
+            lenders = MortgageLender.objects.all()
+            self.result = lenders

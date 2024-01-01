@@ -115,7 +115,7 @@ DATABASES = {
         'PASSWORD' : 'Ramu@123',
         'HOST': 'localhost',
         'PORT' : '5432',
-    }
+    },   
 }
 
 SIMPLE_JWT = {
@@ -263,3 +263,22 @@ CORS_ALLOW_ALL_HEADERS = True
 #         }
 #     }
 # }
+
+# settings.py
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    },
+}
