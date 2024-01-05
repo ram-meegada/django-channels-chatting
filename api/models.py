@@ -316,6 +316,66 @@ class CommercialRealEstate(models.Model):
             models.Index(fields=['id'])
         ]
 
+class CreNotesModel(models.Model):
+    notes = models.TextField()
+    cre = models.ForeignKey(CommercialRealEstate, on_delete = models.CASCADE)
+
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
+    deleted_at = models.DateTimeField(blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    is_deleted = models.BooleanField(default=False)
+    can_delete = models.BooleanField(default=True)
+
+    def __unicode__(self):
+        return self.id
+
+    class Meta:
+        db_table = 'cre_notes'
+        indexes = [
+            models.Index(fields=['cre'])
+        ]
+
+class SaveCreLeads(models.Model):
+    id = models.AutoField(primary_key=True)
+    cre_user = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True,related_name="cre_user")
+    cre_lead = models.ForeignKey(CommercialRealEstate,on_delete=models.CASCADE, blank=True, null=True,related_name="cre_lead")
+    cre_lender = models.ForeignKey(MortgageLender, on_delete=models.CASCADE, blank=True, null=True,related_name="cre_lender")
+
+    is_bookmarked = models.BooleanField(default=True, blank=True, null=True)
+
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
+    deleted_at = models.DateTimeField(blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    is_deleted = models.BooleanField(default=False)
+    can_delete = models.BooleanField(default=True)
+
+    def __unicode__(self):
+        return self.id
+
+    class Meta:
+        db_table = 'save_cre_leads'
+        indexes = [
+            models.Index(fields=['cre_lender'])
+        ]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 class CloneCommercialRealEstate(models.Model):
     id = models.AutoField(primary_key=True)
     loan_amount = models.DecimalField(max_digits=15, decimal_places=2, blank=True, null=True)

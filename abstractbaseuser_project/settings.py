@@ -52,6 +52,9 @@ INSTALLED_APPS = [
     'stripe_app.apps.StripeAppConfig',
 
     'debug_toolbar',
+    'django_crontab',
+
+    # 'background_task'
 ]
 
 MIDDLEWARE = [
@@ -110,9 +113,9 @@ ASGI_APPLICATION = 'abstractbaseuser_project.asgi.application'
 DATABASES = {
     'default':{
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'user_database',
+        'NAME': 'user_database1',
         'USER': 'postgres',
-        'PASSWORD' : 'Ramu@123',
+        'PASSWORD' : 'apptunix',
         'HOST': 'localhost',
         'PORT' : '5432',
     },   
@@ -211,8 +214,11 @@ CHANNEL_LAYERS = {
     },
 }
 
-CELERY_BROKER_URL = 'redis://127.0.0.1:6379'
-CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379'
+# CELERY_BROKER_URL = 'redis://127.0.0.1:6370'
+# CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6370'
+
+CELERY_BROKER_URL = 'pyamqp://guest:guest@localhost:5672/'
+CELERY_RESULT_BACKEND = 'rpc://localhost:5672/'
 
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
@@ -282,3 +288,7 @@ LOGGING = {
         },
     },
 }
+
+CRONJOBS = [
+    ('*/5 * * * *', 'api.cron.my_cron_job'),
+]

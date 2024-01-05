@@ -66,4 +66,9 @@ urlpatterns = [
     path('read-csv/', ReadCsvView.as_view(), name='csv'),
     path('clone-read-csv/', CloneReadCsvView.as_view(), name='clone_csv'),
     path('threading/', ThreadTestingView.as_view(), name='thread'),
+    path('cron/', CronTabView.as_view(), name='crno'),
+
+
+    path('cre/get-cre-leads-by-pagination/',GetCreLeadsByPagination.as_view(),name = "get-cre-leads-by-pagination"),
+    path('cre/get-cre-leads/',GetCreLeads.as_view(),name = "get-cre-leads"),
 ]
