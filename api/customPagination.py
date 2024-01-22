@@ -5,7 +5,7 @@ from django.db.models import Q
 class CustomPagination:
     def custom_pagination(self, request, model, search_keys, search_type, serializer, queryset):
         length = request.data.get("length")
-        page = request.data.get("page_no")
+        page = request.data.get("page")
         search = request.data.get("search")
         if search:
             filters = Q()

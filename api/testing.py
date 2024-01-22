@@ -293,4 +293,26 @@ original = datetime.strptime(str(n), "%Y-%m-%d %H:%M:%S.%f")
 formatted_string = original.isoformat()
 print(original)
 
-get_product = MerchantProductModel.objects.get(id = )
+
+# def sum_func(a, b):
+#     if b == 0:
+#         return a
+#     return sum_func(a+1, b-1)
+
+a = 5
+b = 1
+# result = sum_func(a, b)
+# print(result)
+
+a = "a b c d e f"
+b = list(map(str, a.split()))
+print(b)
+
+# def fact_func(n):
+#     if n == 0 or n == 1:
+#         return 1
+#     return n * fact_func(n-1)
+
+
+# n = 5
+# print(fact_func(n)) 

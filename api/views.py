@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from .models import User, ChatBotModel, QuestionAndAnswer, SaveChatOneToOneRoomModel,       OneToOneChatRoomModel, SessionIdStoreModel, ChatStorageWithSessionIdModel
 from rest_framework.views import APIView
@@ -229,6 +229,7 @@ class CheckRabbitMqApi(APIView):
 
 class RegistrationApi(APIView):
     def post(self, request):
+        print('-----------------')
         start = datetime.now()
         password = request.data['password']
         serializer = UserSerializer(data=request.data)
@@ -782,7 +783,7 @@ class CronTabView(APIView):
 from .serializers import *
 from .customPagination import CustomPaginationMobileView, CustomPagination         
 class GetCreLeadsByPagination(APIView):
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticated,)
     def post(self, request, format=None):
         print(request.data,"=========req=====data=====")
         cre_obj = CommercialRealEstate.objects.all()
@@ -799,12 +800,167 @@ class GetCreLeadsByPagination(APIView):
             return Response({"data": response['response_object'], "recordsTotal": response['total_records'],"recordsFiltered": response['total_records'],"code": status.HTTP_204_NO_CONTENT, "message": "RECORD_NOT_FOUND"})
         
 class GetCreLeads(APIView):
-    permission_classes = (AllowAny,)
     def get(self, request, format=None):
         try:
             print(request.user.id, '-------------request.user.id-----------')
             cre_obj = CommercialRealEstate.objects.all()
             serializer = CommercialRealEstateSerializer(cre_obj, many=True, context={"user_id":request.user.id})
-            return({"data":serializer.data, "code":status.HTTP_200_OK, "message": "OK"})
+            return Response({"data":serializer.data, "code":status.HTTP_200_OK, "message": "OK"})
         except CommercialRealEstate.DoesNotExist:
-            return({"data":None, "code":status.HTTP_400_BAD_REQUEST, "message": "BAD_REQUEST"})
+            return Response({"data":None, "code":status.HTTP_400_BAD_REQUEST, "message": "BAD_REQUEST"})
+        
+class GetUserLenders(APIView):    
+    permission_classes = (IsAuthenticated, )    
+    def get(self, request,format  = None):
+        try:
+            user_id = request.user.id  # Assuming you have user information in the request
+            count_of_lenders = SaveCreLeads.objects.filter(cre_user_id=user_id)
+            lender_count = {}
+            for i in count_of_lenders:
+                if i.cre_lender_id is None:
+                    continue
+                if i.cre_lender_id not in lender_count:
+                    lender_count[i.cre_lender_id] = 1
+                else:
+                    lender_count[i.cre_lender_id] += 1
+            lenders = MortgageLender.objects.filter(id__in=list(lender_count.keys()))
+            serializer = MortgagelenderSerializer(lenders, many=True, context={"lender_count": lender_count})
+            data = list(serializer.data)
+            result = sorted(data, key=lambda v: v["count"], reverse=True)
+            return Response({"data": result, "code": status.HTTP_200_OK, "message": "OK"})
+        except SaveCreLeads.DoesNotExist:
+            return Response({"data": None, "code": status.HTTP_400_BAD_REQUEST, "message": "BAD_REQUEST"})
+        
+class GetAllBorrowers(APIView):
+    permission_classes = (IsAuthenticated, )    
+    def get(self, request, format=None):
+        try:
+            Borrowers_obj = Borrowers.objects.all()
+            serializer = BorrowersSizeSerializer(Borrowers_obj, many=True)
+            return Response({"data":serializer.data, "code":status.HTTP_200_OK, "message":"OK"})
+        except Borrowers.DoesNotExist:
+            return Response({"data":None, "code":status.HTTP_400_BAD_REQUEST, "message":"BAD_REQUEST"})
+        
+class GetAllLenders(APIView):        
+    permission_classes = (IsAuthenticated, )    
+    def get(self, request, format=None):
+        try:
+            lenders_obj = MortgageLender.objects.all()
+            serializer = LendersSizeSerializer(lenders_obj, many=True)
+            return Response({"data":serializer.data, "code":status.HTTP_200_OK, "message":"OK"})
+        except MortgageLender.DoesNotExist:
+            return Response({"data":None, "code":status.HTTP_400_BAD_REQUEST, "message":"BAD_REQUEST"})        
+        
+class GetCreLeadsById(APIView):        
+    def get(self,request,pk,format = None):
+        user_id = request.user.id
+        try:
+            cre_obj = CommercialRealEstate.objects.get(id = pk)
+            serializer = CommercialRealEstateSerializer(cre_obj, context = {"user_id":user_id})
+            return Response({"data":serializer.data, "code":status.HTTP_200_OK, "message":"OK"})
+        except CommercialRealEstate.DoesNotExist:
+            return Response({"data":None, "code":status.HTTP_400_BAD_REQUEST, "message":"BAD_REQUEST"})        
+        
+class GetLeadDetailsByLenderId(APIView):        
+    def get(self,request,lender_id,format = None):
+        try:
+            print(request.user.id, '--------------------')
+            cre_obj = SaveCreLeads.objects.filter(cre_lender_id=lender_id, cre_user_id=request.user)
+            print(cre_obj, '-----------------cre-------------')
+            serializer = GetCreLeadsSerialzer(cre_obj, many=True)
+            return Response({"data":serializer.data, "code":status.HTTP_200_OK, "message":"OK"})
+        except SaveCreLeads.DoesNotExist:
+            print('-------------came here--------------------')
+            return Response({"data":None, "code":status.HTTP_400_BAD_REQUEST, "message":"BAD_REQUEST"})        
+        
+class GetbookmarkedCreLeads(APIView):        
+    def get(self, request, bookmarked_cre_id):
+        print('came here--------get_bookmarked_cre_by_id-----------------')
+        try:
+            cre_obj = SaveCreLeads.objects.get(id = bookmarked_cre_id)
+        except Exception as e:
+            print(e, '------eeeeeeeeee')
+            return({"data":None, "code":status.HTTP_204_NO_CONTENT, "message":"RECORD_NOT_FOUND"})
+        serializer = GetCreLeadSerializer(cre_obj)
+        print(serializer.data, '--------------')
+        return Response({"data":serializer.data, "code":status.HTTP_200_OK, "message":"OK"})        
+    
+class GetCreFiltersView(APIView):    
+    def post(self,request, format = None):
+        queryset = CommercialRealEstate.objects.all()
+        filters_data = request.data.get("filters")
+        sorting_key = request.data.get("sort_with")
+        try:
+            search_values = (request.data['search']['value']).strip()
+        except:
+            search_values = None    
+        if filters_data:
+            for key, value in filters_data.items():
+                print(f"Applying filter: {key} = {value}")
+                if key == "loan_amount_start":
+                    queryset = queryset.filter(loan_amount__gte=int(value))
+                elif key == "loan_amount_end":
+                    queryset = queryset.filter(loan_amount__lte=int(value))
+                elif key == "origination_date_start":
+                    queryset = queryset.filter(origination_date__gte=datetime.strptime(value, "%Y-%m-%d"))
+                elif key == "origination_date_end":
+                    queryset = queryset.filter(origination_date__lte=datetime.strptime(value, "%Y-%m-%d"))
+                elif key == "maturity_date_start":
+                    queryset = queryset.filter(maturity_date__gte=datetime.strptime(value, "%Y-%m-%d"))
+                elif key == "maturity_date_end":
+                    queryset = queryset.filter(maturity_date__lte=datetime.strptime(value, "%Y-%m-%d"))
+                elif key == "collateral_type":
+                    # queryset = queryset.filter(collateral_type=value)
+                    queryset = queryset.filter(collateral_type__collateral_type__icontains = value)
+                elif key == "street_address":
+                    queryset = queryset.filter(street_address=value)
+                elif key == "city":
+                    queryset = queryset.filter(city=value)
+                elif key == "state":
+                    queryset = queryset.filter(state__id=value)
+                elif key == "borrower":
+                    # queryset = queryset.filter(borrower__id=value)
+                    # results = CommercialRealEstate.objects.filter(borrower__borrower__icontains = "rio")
+                    queryset = queryset.filter(borrower__borrower__icontains = value)
+
+                elif key == "lender":
+                    # queryset = queryset.filter(lender__id=value)
+                    # results = CommercialRealEstate.objects.filter(lender__lender__icontains = "rio")
+                    queryset = queryset.filter(lender__lender__icontains = value)
+
+                print(f"After {key} filter: {queryset.count()} records")
+        if sorting_key:
+            if sorting_key == 2:
+                queryset = queryset.order_by("-loan_amount")
+            elif sorting_key == 3:
+                queryset = queryset.order_by("loan_amount")
+            elif sorting_key == 4:
+                print(datetime.now(), '============datetime.now()============')
+                queryset = queryset.filter(maturity_date__gt = datetime.now())
+            elif sorting_key == 5:
+                print(datetime.now(), '============datetime.now()============')
+                queryset = queryset.filter(maturity_date__lt = datetime.now())
+
+        if search_values:
+            print(queryset, '=====================queryset===========')
+            borrower_name = Borrowers.objects.filter(borrower__icontains = search_values)
+            filtered_borrower_list = [i.id for i in borrower_name]
+            print(filtered_borrower_list, '----------filtered_borrower_list---------')
+            lenders_name = MortgageLender.objects.filter(lender__icontains = search_values)
+            filtered_lender_list = [i.id for i in lenders_name]
+            if filtered_lender_list:
+                queryset = queryset.filter(lender__in = filtered_lender_list)
+            elif filtered_borrower_list:    
+                queryset = queryset.filter(borrower__in = filtered_borrower_list)
+            print(queryset, '========2===========2222222222====')
+
+        custom_pagination_class = CustomPagination() 
+        search_keys = ['borrower__borrower__icontains', 'lender__lender__icontains']
+        search_type = 'or'
+
+        response = custom_pagination_class.custom_pagination(request, CommercialRealEstate, search_keys, search_type, CommercialRealEstateSerializer,queryset)
+
+        if response['response_object']:
+            return Response({"data": response['response_object'], "recordsTotal": len(response['response_object']),"recordsFiltered": response['total_records'],"code": status.HTTP_200_OK, "message": "OK"})
+        else:
+            return Response({"data": response['response_object'], "recordsTotal": response['total_records'],"recordsFiltered": response['total_records'],"code": status.HTTP_200_OK, "message": "RECORD_NOT_FOUND"})
