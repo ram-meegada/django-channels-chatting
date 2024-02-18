@@ -70,4 +70,17 @@ urlpatterns = [
     
     path('create-source/', CreateSourceView.as_view(), name='source'),
     path('get-posts/', GetAllPostsView.as_view(), name='getsource'),
+    path('cron/', CronTabView.as_view(), name='crno'),
+
+    ### bancreach
+    path('cre/get-cre-leads-by-pagination/',GetCreLeadsByPagination.as_view(),name = "get-cre-leads-by-pagination"),
+    
+    path('cre/get-lenders-of-the-user/',GetUserLenders.as_view(),name = "get-lenders-of-the-user"),
+    path('cre/get-all-borrowers/',GetAllBorrowers.as_view(),name = "get-all-borrowers"),
+    path('cre/get-all-lenders/',GetAllLenders.as_view(),name = "get-all-lenders"),
+    path('cre/get-cre-leads/',GetCreLeads.as_view(),name = "get-cre-leads"),
+    path('cre/get-cre-leads-by-id/<int:pk>/',GetCreLeadsById.as_view(),name = "get-cre-leads-by-id"),
+    path('cre/get-lead-details-by-lender-id/<int:lender_id>/',GetLeadDetailsByLenderId.as_view(),name = "get-lead-details-by-lender-id"),
+    path('cre/get-bookmarked-cre-leads/<int:bookmarked_cre_id>/',GetbookmarkedCreLeads.as_view(),name = "get-bookmarked-leads"),
+    path('cre/cre-filters/',GetCreFiltersView.as_view(),name = "cre-filters"),
 ]

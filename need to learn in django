@@ -1,6 +1,7 @@
 working with multiple databases in django
 DSA in python
 low level and high level desing
+select_related, prefetch_related in database querying
 read csv
 **docker
 Caching

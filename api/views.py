@@ -1,4 +1,6 @@
 from django.shortcuts import render
+from rest_framework.permissions import AllowAny, IsAuthenticated
+
 from .models import User, ChatBotModel, QuestionAndAnswer, SaveChatOneToOneRoomModel,       OneToOneChatRoomModel, SessionIdStoreModel, ChatStorageWithSessionIdModel
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -7,7 +9,7 @@ from .serializers import *
 from rest_framework import status
 import string, random, json
 from api.utils import get_all_chats
-from api.tasks import add, send_apikey_to_mail
+from api.tasks import *
 import ast
 from rest_framework.permissions import IsAuthenticated
 from django.http import HttpResponseRedirect, HttpResponse
@@ -227,6 +229,7 @@ class CheckRabbitMqApi(APIView):
 
 class RegistrationApi(APIView):
     def post(self, request):
+        print('-----------------')
         start = datetime.now()
         password = request.data['password']
         serializer = UserSerializer(data=request.data)
@@ -561,36 +564,19 @@ class SendMailCeleryView(APIView):
     def get(self, request):
         print('------------send0000000000000')
         # send_apikey_to_mail.delay("stefenwarner13@yopmail.com")
-        send_apikey_to_mail.apply_async(args=['stefenwarner13@yopmail.com'], countdown=60)
+        add_task.apply_async(args=[1, 2])
         return Response({"data":"None", "message":"done"})
 
+import ast
 class ReadCsvView(APIView):
+    permission_classes = [AllowAny]
     def post(self, request, format=None):
         try:
-            first_start_time = datetime.now()
-            # Check if 'csv_file' is present in the request.FILES
             if 'csv_file' not in request.FILES:
                 raise ValueError("CSV file is missing in the request.")
-
             file = request.FILES['csv_file']
-            # content = pd.read_csv(file) 
             content = pd.read_excel(file, engine='openpyxl')
             df_no_duplicates = content.drop_duplicates()
-            print(df_no_duplicates, '--------------df_no_duplicates------------')
-            # df_no_duplicates = pd.read_excel(file).drop_duplicates()
-            # df_no_duplicates.columns = df_no_duplicates.columns.str.lower()
-            # mortgage_lender =  df_no_duplicates[['mortgage lender']]
-            # mortgage_lender.columns = ['lender']
-            # print(mortgage_lender, '----------mortgage_lender-----------')
-            # collateral_type =  df_no_duplicates[['collateral type']]
-            # collateral_type.columns = ['collateral_type']
-            # origination_date =  df_no_duplicates[['origination date']]
-            # origination_date.columns = ['origination_date']
-            # print(origination_date, type(origination_date), '-------------origination_date------------')
-            # maturity_date =  df_no_duplicates[['maturity date']]
-            # maturity_date.columns = ['maturity_date']
-            # print(df_no_duplicates.columns, type(df_no_duplicates.columns), '===========df_no_duplicates==============')
-            # Handle Foreign Keys 
             df_no_duplicates.rename(columns={"MORTGAGE LENDER": "lender_id"}, inplace=True)
             df_no_duplicates.rename(columns={"BORROWER": "borrower_id"}, inplace=True)
             df_no_duplicates.rename(columns={"COLLATERAL TYPE": "collateral_type_id"}, inplace=True)
@@ -612,97 +598,12 @@ class ReadCsvView(APIView):
             df_no_duplicates['origination_date'] = pd.to_datetime(df_no_duplicates['origination_date'], format='%d/%m/%y').dt.strftime('%Y-%m-%d %H:%M:%S.%f%z').fillna('1970-01-01 00:00:00.000000+0000')
             df_no_duplicates['maturity_date'] = pd.to_datetime(df_no_duplicates['maturity_date'], format='%d/%m/%y', errors='coerce')
             df_no_duplicates['maturity_date'] = pd.to_datetime(df_no_duplicates['maturity_date'], format='%d/%m/%y').dt.strftime('%Y-%m-%d %H:%M:%S.%f%z').fillna('2050-01-01 00:00:00.000000+0000')
-            # print(borrower_data, type(borrower_data), "------borrower_data-----borrower_data--------------")
-            print(datetime.now()- first_start_time, '================fiirst time taken=============')
-            with transaction.atomic():
-                state_time = datetime.now()
-                existing_borrowers = set(Borrowers.objects.values_list('borrower', flat=True))
-                result_records = []
-                for i in borrower_data:
-                    if i not in result_records:
-                        result_records.append(i)
-                new_borrower_instances = [Borrowers(borrower=data['borrower_id']) for data in result_records if data['borrower_id'] not in existing_borrowers]
-                borrower_instances = Borrowers.objects.bulk_create(new_borrower_instances, 1000)
-
-                existing_states = set(StateRealEstate.objects.values_list('state', flat=True))
-                state_result_records = []
-                for i in state_data:
-                    if i not in state_result_records:
-                        state_result_records.append(i)
-                new_state_instances = [StateRealEstate(state=data['state_id']) for data in state_result_records if data['state_id'] not in existing_states]
-                state_instances = StateRealEstate.objects.bulk_create(new_state_instances, 1000)
-                
-                existing_lenders = set(MortgageLender.objects.values_list('lender', flat=True))
-                lender_result_records = []
-                for i in mortgage_lender_data:
-                    if i not in lender_result_records:
-                        lender_result_records.append(i)
-                new_lender_instances = [MortgageLender(lender=data['lender_id']) for data in lender_result_records if data['lender_id'] not in existing_lenders]
-                print(new_lender_instances, '-------------new_lender_instances-------new_lender_instances-----------')
-                mortgage_lender_instances = MortgageLender.objects.bulk_create(new_lender_instances, 1000)
-                
-                existing_collaterals = set(CollateralModel.objects.values_list('collateral_type', flat=True))
-                collateral_result_records = []
-                for i in collateral_data:
-                    if i not in collateral_result_records:
-                        collateral_result_records.append(i)
-                new_collateral_instances = [CollateralModel(collateral_type=data['collateral_type_id']) for data in collateral_result_records if data['collateral_type_id'] not in existing_collaterals]
-                collateral_instances = CollateralModel.objects.bulk_create(new_collateral_instances, 1000)
-
-                print(datetime.now()-state_time, '------------time taken----------------')
-            # Create Records in CommercialRealEstate
             commercial_real_estate_data = df_no_duplicates.to_dict(orient='records')
-            # print(commercial_real_estate_data, '-----------commercial_real_estate_data-----------------**********')
-            with transaction.atomic():
-                starting_time = datetime.now()
-                for data in commercial_real_estate_data:
-                    # check_lenders = MortgageLender.objects.filter(lender=data['lender'])
-                    # if len(check_lenders) > 1:
-                    #     check_lenders.delete()
-                    # check_collateral_type = CollateralModel.objects.filter(collateral_type=data['collateral_type'])
-                    # if len(check_collateral_type) > 1:
-                    #     check_collateral_type.delete()
-                    # check_borrowers = Borrowers.objects.filter(borrower=data['borrower'])
-                    # if len(check_borrowers) > 1:
-                    #     check_borrowers.delete()
-                    # Use get_or_create to ensure the foreign key instance exists
-                    try:
-                        data['borrower_id'] = Borrowers.objects.get(borrower=data['borrower_id']).id
-                    except:
-                        obj = Borrowers.objects.create(borrower=data['borrower_id'])
-                        data['borrower_id'] = obj.id
-                    # data['borrower'], _ = Borrowers.objects.get_or_create(borrower=data['borrower'])
-                    try:
-                        data['lender_id'] = MortgageLender.objects.get(lender=data['lender_id']).id
-                    except:
-                        obj = MortgageLender.objects.create(lender=data['lender_id'])    
-                        data['lender_id'] = obj.id
-                    # data['lender'] = MortgageLender.objects.create(lender=data['lender'])
-                    state_instance = StateRealEstate.objects.filter(state=data['state_id']).first()
 
-                    if state_instance:
-                        data['state_id'] = state_instance.id
-                    else:
-                        data['state_id'] = StateRealEstate.objects.create(state=data['state_id']).id
-                    try:    
-                        data['collateral_type_id'] = CollateralModel.objects.get(collateral_type=data['collateral_type_id']).id
-                    except:
-                        data['collateral_type_id'] = CollateralModel.objects.create(collateral_type=data['collateral_type_id']).id    
-                CommercialRealEstate.objects.bulk_create([CommercialRealEstate(**data) for data in commercial_real_estate_data], 1000)
-                print(datetime.now() - starting_time, '=====================2nd process time=============')
-            print(datetime.now() - first_start_time, '=====================full process time=============')
-            result = {"data": None, "message": "done", "code": status.HTTP_200_OK}
-            return Response(result, status=status.HTTP_200_OK)
-
-        except ValueError as ve:
-            print(f"ValueError: {ve}")
-            result = {"data": None, "message": str(ve)}
-            return Response(result, status=status.HTTP_400_BAD_REQUEST)
-
-        except Exception as e:
-            print(f"An unexpected error occurred: {e}")
-            result = {"data": None, "message": "Internal Server Error"}
-            return Response(result, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            read_csv_task.apply_async(args = [commercial_real_estate_data, borrower_data, state_data, mortgage_lender_data, collateral_data])
+            return Response({"data": None, "message": "done"})
+        except Exception as error:    
+            return Response({"data": None, "message": str(error)})
         
 # class ThreadTestingView(APIView):
 #     def get(self, request):
@@ -857,3 +758,231 @@ class GetAllPostsView(APIView):
         sources = Post.objects.all()
         serializer = PostSerializer(sources, many = True)
         return Response(serializer.data)
+from api.cron import my_cron_job        
+# from background_task import background
+
+class CronTabView(APIView):
+    permission_classes = [AllowAny]
+    def post(self, request):
+        try:
+            if 'csv_file' not in request.FILES:
+                raise ValueError("CSV file is missing in the request.")
+            file = request.FILES['csv_file']
+            content = pd.read_excel(file, engine='openpyxl')
+            df_no_duplicates = content.drop_duplicates()
+            df_no_duplicates.rename(columns={"MORTGAGE LENDER": "lender_id"}, inplace=True)
+            df_no_duplicates.rename(columns={"BORROWER": "borrower_id"}, inplace=True)
+            df_no_duplicates.rename(columns={"COLLATERAL TYPE": "collateral_type_id"}, inplace=True)
+            df_no_duplicates.rename(columns={"ORIG. LOAN AMOUNT": "loan_amount"}, inplace=True)
+            df_no_duplicates.rename(columns={"ORIGINATION DATE": "origination_date"}, inplace=True)
+            df_no_duplicates.rename(columns={"MATURITY DATE": "maturity_date"}, inplace=True)
+            df_no_duplicates.rename(columns={"ADDRESS": "street_address"}, inplace=True)
+            df_no_duplicates.rename(columns={"CITY": "city"}, inplace=True)
+            df_no_duplicates.rename(columns={"STATE": "state_id"}, inplace=True)
+            df_no_duplicates.rename(columns={"COUNTY": "county"}, inplace=True)
+
+            df_no_duplicates['loan_amount'] = df_no_duplicates['loan_amount'].replace('[\$,]', '', regex=True).astype(float)
+            borrower_data = df_no_duplicates[['borrower_id']].to_dict(orient='records')
+            county = df_no_duplicates[['county']].to_dict(orient='records')
+            mortgage_lender_data = df_no_duplicates[['lender_id']].to_dict(orient='records')
+            state_data = df_no_duplicates[['state_id']].to_dict(orient='records')
+            collateral_data = df_no_duplicates[['collateral_type_id']].to_dict(orient='records')
+            df_no_duplicates['origination_date'] = pd.to_datetime(df_no_duplicates['origination_date'], format='%d/%m/%y', errors='coerce')
+            df_no_duplicates['origination_date'] = pd.to_datetime(df_no_duplicates['origination_date'], format='%d/%m/%y').dt.strftime('%Y-%m-%d %H:%M:%S.%f%z').fillna('1970-01-01 00:00:00.000000+0000')
+            df_no_duplicates['maturity_date'] = pd.to_datetime(df_no_duplicates['maturity_date'], format='%d/%m/%y', errors='coerce')
+            df_no_duplicates['maturity_date'] = pd.to_datetime(df_no_duplicates['maturity_date'], format='%d/%m/%y').dt.strftime('%Y-%m-%d %H:%M:%S.%f%z').fillna('2050-01-01 00:00:00.000000+0000')
+            commercial_real_estate_data = df_no_duplicates.to_dict(orient='records')
+
+            # read_csv_task.apply_async(args = [commercial_real_estate_data, borrower_data, state_data, mortgage_lender_data, collateral_data])
+            # my_cron_job(commercial_real_estate_data, borrower_data, state_data, mortgage_lender_data, collateral_data)
+            read_csv_task(commercial_real_estate_data, borrower_data, state_data, mortgage_lender_data, collateral_data)
+            return Response({"data": None, "message": "done"})
+        except Exception as error:    
+            return Response({"data": None, "message": str(error)})
+        
+
+
+from .serializers import *
+from .customPagination import CustomPaginationMobileView, CustomPagination         
+class GetCreLeadsByPagination(APIView):
+    permission_classes = (IsAuthenticated,)
+    def post(self, request, format=None):
+        print(request.data,"=========req=====data=====")
+        cre_obj = CommercialRealEstate.objects.all()
+        custom_pagination_obj = CustomPagination()
+        search_keys = ['loan_amount__icontains']
+        search_type = 'or'
+
+        response = custom_pagination_obj.custom_pagination(request, CommercialRealEstate, search_keys, search_type, CommercialRealEstateSerializer,cre_obj)
+
+        if response['response_object']:
+            print(len(response['response_object']), type(response['response_object']), '-----------responseeeeeeeeeee]')
+            return Response({"data": response['response_object'], "recordsTotal": len(response['response_object']),"recordsFiltered": response['total_records'],"code": status.HTTP_200_OK, "message": "OK"})
+        else:
+            return Response({"data": response['response_object'], "recordsTotal": response['total_records'],"recordsFiltered": response['total_records'],"code": status.HTTP_204_NO_CONTENT, "message": "RECORD_NOT_FOUND"})
+        
+class GetCreLeads(APIView):
+    def get(self, request, format=None):
+        try:
+            print(request.user.id, '-------------request.user.id-----------')
+            cre_obj = CommercialRealEstate.objects.all()
+            serializer = CommercialRealEstateSerializer(cre_obj, many=True, context={"user_id":request.user.id})
+            return Response({"data":serializer.data, "code":status.HTTP_200_OK, "message": "OK"})
+        except CommercialRealEstate.DoesNotExist:
+            return Response({"data":None, "code":status.HTTP_400_BAD_REQUEST, "message": "BAD_REQUEST"})
+        
+class GetUserLenders(APIView):    
+    permission_classes = (IsAuthenticated, )    
+    def get(self, request,format  = None):
+        try:
+            user_id = request.user.id  # Assuming you have user information in the request
+            count_of_lenders = SaveCreLeads.objects.filter(cre_user_id=user_id)
+            lender_count = {}
+            for i in count_of_lenders:
+                if i.cre_lender_id is None:
+                    continue
+                if i.cre_lender_id not in lender_count:
+                    lender_count[i.cre_lender_id] = 1
+                else:
+                    lender_count[i.cre_lender_id] += 1
+            lenders = MortgageLender.objects.filter(id__in=list(lender_count.keys()))
+            serializer = MortgagelenderSerializer(lenders, many=True, context={"lender_count": lender_count})
+            data = list(serializer.data)
+            result = sorted(data, key=lambda v: v["count"], reverse=True)
+            return Response({"data": result, "code": status.HTTP_200_OK, "message": "OK"})
+        except SaveCreLeads.DoesNotExist:
+            return Response({"data": None, "code": status.HTTP_400_BAD_REQUEST, "message": "BAD_REQUEST"})
+        
+class GetAllBorrowers(APIView):
+    permission_classes = (IsAuthenticated, )    
+    def get(self, request, format=None):
+        try:
+            Borrowers_obj = Borrowers.objects.all()
+            serializer = BorrowersSizeSerializer(Borrowers_obj, many=True)
+            return Response({"data":serializer.data, "code":status.HTTP_200_OK, "message":"OK"})
+        except Borrowers.DoesNotExist:
+            return Response({"data":None, "code":status.HTTP_400_BAD_REQUEST, "message":"BAD_REQUEST"})
+        
+class GetAllLenders(APIView):        
+    permission_classes = (IsAuthenticated, )    
+    def get(self, request, format=None):
+        try:
+            lenders_obj = MortgageLender.objects.all()
+            serializer = LendersSizeSerializer(lenders_obj, many=True)
+            return Response({"data":serializer.data, "code":status.HTTP_200_OK, "message":"OK"})
+        except MortgageLender.DoesNotExist:
+            return Response({"data":None, "code":status.HTTP_400_BAD_REQUEST, "message":"BAD_REQUEST"})        
+        
+class GetCreLeadsById(APIView):        
+    def get(self,request,pk,format = None):
+        user_id = request.user.id
+        try:
+            cre_obj = CommercialRealEstate.objects.get(id = pk)
+            serializer = CommercialRealEstateSerializer(cre_obj, context = {"user_id":user_id})
+            return Response({"data":serializer.data, "code":status.HTTP_200_OK, "message":"OK"})
+        except CommercialRealEstate.DoesNotExist:
+            return Response({"data":None, "code":status.HTTP_400_BAD_REQUEST, "message":"BAD_REQUEST"})        
+        
+class GetLeadDetailsByLenderId(APIView):        
+    def get(self,request,lender_id,format = None):
+        try:
+            print(request.user.id, '--------------------')
+            cre_obj = SaveCreLeads.objects.filter(cre_lender_id=lender_id, cre_user_id=request.user)
+            print(cre_obj, '-----------------cre-------------')
+            serializer = GetCreLeadsSerialzer(cre_obj, many=True)
+            return Response({"data":serializer.data, "code":status.HTTP_200_OK, "message":"OK"})
+        except SaveCreLeads.DoesNotExist:
+            print('-------------came here--------------------')
+            return Response({"data":None, "code":status.HTTP_400_BAD_REQUEST, "message":"BAD_REQUEST"})        
+        
+class GetbookmarkedCreLeads(APIView):        
+    def get(self, request, bookmarked_cre_id):
+        print('came here--------get_bookmarked_cre_by_id-----------------')
+        try:
+            cre_obj = SaveCreLeads.objects.get(id = bookmarked_cre_id)
+        except Exception as e:
+            print(e, '------eeeeeeeeee')
+            return({"data":None, "code":status.HTTP_204_NO_CONTENT, "message":"RECORD_NOT_FOUND"})
+        serializer = GetCreLeadSerializer(cre_obj)
+        print(serializer.data, '--------------')
+        return Response({"data":serializer.data, "code":status.HTTP_200_OK, "message":"OK"})        
+    
+class GetCreFiltersView(APIView):    
+    def post(self,request, format = None):
+        queryset = CommercialRealEstate.objects.all()
+        filters_data = request.data.get("filters")
+        sorting_key = request.data.get("sort_with")
+        try:
+            search_values = (request.data['search']['value']).strip()
+        except:
+            search_values = None    
+        if filters_data:
+            for key, value in filters_data.items():
+                print(f"Applying filter: {key} = {value}")
+                if key == "loan_amount_start":
+                    queryset = queryset.filter(loan_amount__gte=int(value))
+                elif key == "loan_amount_end":
+                    queryset = queryset.filter(loan_amount__lte=int(value))
+                elif key == "origination_date_start":
+                    queryset = queryset.filter(origination_date__gte=datetime.strptime(value, "%Y-%m-%d"))
+                elif key == "origination_date_end":
+                    queryset = queryset.filter(origination_date__lte=datetime.strptime(value, "%Y-%m-%d"))
+                elif key == "maturity_date_start":
+                    queryset = queryset.filter(maturity_date__gte=datetime.strptime(value, "%Y-%m-%d"))
+                elif key == "maturity_date_end":
+                    queryset = queryset.filter(maturity_date__lte=datetime.strptime(value, "%Y-%m-%d"))
+                elif key == "collateral_type":
+                    # queryset = queryset.filter(collateral_type=value)
+                    queryset = queryset.filter(collateral_type__collateral_type__icontains = value)
+                elif key == "street_address":
+                    queryset = queryset.filter(street_address=value)
+                elif key == "city":
+                    queryset = queryset.filter(city=value)
+                elif key == "state":
+                    queryset = queryset.filter(state__id=value)
+                elif key == "borrower":
+                    # queryset = queryset.filter(borrower__id=value)
+                    # results = CommercialRealEstate.objects.filter(borrower__borrower__icontains = "rio")
+                    queryset = queryset.filter(borrower__borrower__icontains = value)
+
+                elif key == "lender":
+                    # queryset = queryset.filter(lender__id=value)
+                    # results = CommercialRealEstate.objects.filter(lender__lender__icontains = "rio")
+                    queryset = queryset.filter(lender__lender__icontains = value)
+
+                print(f"After {key} filter: {queryset.count()} records")
+        if sorting_key:
+            if sorting_key == 2:
+                queryset = queryset.order_by("-loan_amount")
+            elif sorting_key == 3:
+                queryset = queryset.order_by("loan_amount")
+            elif sorting_key == 4:
+                print(datetime.now(), '============datetime.now()============')
+                queryset = queryset.filter(maturity_date__gt = datetime.now())
+            elif sorting_key == 5:
+                print(datetime.now(), '============datetime.now()============')
+                queryset = queryset.filter(maturity_date__lt = datetime.now())
+
+        if search_values:
+            print(queryset, '=====================queryset===========')
+            borrower_name = Borrowers.objects.filter(borrower__icontains = search_values)
+            filtered_borrower_list = [i.id for i in borrower_name]
+            print(filtered_borrower_list, '----------filtered_borrower_list---------')
+            lenders_name = MortgageLender.objects.filter(lender__icontains = search_values)
+            filtered_lender_list = [i.id for i in lenders_name]
+            if filtered_lender_list:
+                queryset = queryset.filter(lender__in = filtered_lender_list)
+            elif filtered_borrower_list:    
+                queryset = queryset.filter(borrower__in = filtered_borrower_list)
+            print(queryset, '========2===========2222222222====')
+
+        custom_pagination_class = CustomPagination() 
+        search_keys = ['borrower__borrower__icontains', 'lender__lender__icontains']
+        search_type = 'or'
+
+        response = custom_pagination_class.custom_pagination(request, CommercialRealEstate, search_keys, search_type, CommercialRealEstateSerializer,queryset)
+
+        if response['response_object']:
+            return Response({"data": response['response_object'], "recordsTotal": len(response['response_object']),"recordsFiltered": response['total_records'],"code": status.HTTP_200_OK, "message": "OK"})
+        else:
+            return Response({"data": response['response_object'], "recordsTotal": response['total_records'],"recordsFiltered": response['total_records'],"code": status.HTTP_200_OK, "message": "RECORD_NOT_FOUND"})
