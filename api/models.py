@@ -336,3 +336,17 @@ class CloneCommercialRealEstate(models.Model):
         indexes = [
             models.Index(fields=['borrower', 'lender'])
         ]
+
+class SourceModel(models.Model):
+    name = models.CharField(max_length = 100)
+    user = models.ForeignKey(User, on_delete = models.CASCADE, blank = True, null = True)        
+
+class Post(models.Model):
+    title = models.CharField(max_length=100)
+    content = models.TextField()
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, blank = True, null = True, related_name = "userPost")
+
+class Comment(models.Model):
+    text = models.TextField()
+    post = models.ForeignKey(Post, on_delete=models.CASCADE)    

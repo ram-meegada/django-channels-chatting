@@ -3,7 +3,7 @@ from .models import User, ChatBotModel, QuestionAndAnswer, SaveChatOneToOneRoomM
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.views.generic import TemplateView
-from .serializers import CreateChatbotSerializer, QASerializer, UserSerializer, ChatSerializer
+from .serializers import *
 from rest_framework import status
 import string, random, json
 from api.utils import get_all_chats
@@ -834,3 +834,26 @@ class CloneReadCsvView(APIView):
             print(f"An unexpected error occurred: {e}")
             result = {"data": None, "message": "Internal Server Error"}
             return Response(result, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+class CreateSourceView(APIView):
+    permission_classes = [IsAuthenticated]
+    def post(self, request):
+        print(request.user)
+        serializer = CreateSourceSerializer(data = request.data, context = {'request': request})
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+class GetAllSourceView(APIView):
+    def get(self, request):
+        sources = SourceModel.objects.all()
+        serializer = GetSourceSerializer(sources, many = True)
+        return Response(serializer.data)
+
+class GetAllPostsView(APIView):
+    def get(self, request):
+        sources = Post.objects.all()
+        serializer = PostSerializer(sources, many = True)
+        return Response(serializer.data)

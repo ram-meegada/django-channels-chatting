@@ -66,4 +66,8 @@ urlpatterns = [
     path('read-csv/', ReadCsvView.as_view(), name='csv'),
     path('clone-read-csv/', CloneReadCsvView.as_view(), name='clone_csv'),
     path('threading/', ThreadTestingView.as_view(), name='thread'),
+
+    
+    path('create-source/', CreateSourceView.as_view(), name='source'),
+    path('get-posts/', GetAllPostsView.as_view(), name='getsource'),
 ]

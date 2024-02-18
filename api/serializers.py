@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import ChatBotModel, QuestionAndAnswer, User
+from .models import *
 from . import google
 from .register import register_social_user
 import os
@@ -59,3 +59,30 @@ class GoogleSocialAuthSerializer(serializers.Serializer):
         return register_social_user(
             provider=provider, user_id=user_id, email=email, name=name)        
     
+class CreateSourceSerializer(serializers.ModelSerializer):
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    p_name = serializers.CharField(source = "name")
+    class Meta:
+        model = SourceModel
+        fields = ("id", "p_name", "user")
+
+class GetSourceSerializer(serializers.ModelSerializer):
+    user_email = serializers.CharField(source = "user.email", allow_null = True)
+    class Meta:
+        model = SourceModel
+        fields = ("id", "name", "user_email")
+
+class CommentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Comment
+        fields = ('id', 'text')
+
+class PostParentSerializer(serializers.ModelSerializer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.Meta.depth = self.context.get("depth", 0)
+
+class PostSerializer(PostParentSerializer):
+    class Meta:
+        model = Post
+        fields = ('id', 'title', 'content', 'author', 'user')        
