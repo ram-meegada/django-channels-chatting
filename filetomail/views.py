@@ -8,7 +8,7 @@ from abstractbaseuser_project import settings
 from django.core.mail import EmailMessage
 from django.utils.html import strip_tags
 from filetomail.utils import send_image_to_mail, send_pdf_to_mail
-from api.models import ImgToPdfModel
+# from api.models import ImgToPdfModel
 import os
 
 

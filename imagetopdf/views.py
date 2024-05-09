@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from api.models import ImgToPdfModel
+# from api.models import ImgToPdfModel
 import img2pdf 
 from PIL import Image 
 import os 

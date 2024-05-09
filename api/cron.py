@@ -1,7 +1,7 @@
 # your_app_name/cron.py
 
 # from django_cron import CronJobBase, Schedule
-from .models import StateRealEstate
+# from .models import StateRealEstate
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from abstractbaseuser_project import settings

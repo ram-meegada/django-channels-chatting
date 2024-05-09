@@ -1,5 +1,6 @@
 working with multiple databases in django
 DSA in python
+cron job
 low level and high level desing
 select_related, prefetch_related in database querying
 read csv
@@ -13,7 +14,7 @@ learn aws basics
 learn about custom middleware in (channels and drf)
 stripe payment gateway
 javascript
-api rate limit
+api rate limit  
 can we delete records after specific time automatically in django :- yes with celery but manually also
 send pdf, image, docs through email automation in django :- done
 apps like music player, (file conversions:-done)
@@ -22,13 +23,16 @@ real-time data using channels
 signals in django
 
 # AWS #
+what is cloud
 lambda functions in aws
-RDS database
 s3,
 Ec2 instances
 KMS
-cloud watch
 apache nginx
 dynamo db
+RDS database
 elastic beam stack
 cicd pipeline
+cloud watch
+
+Dr.Neo@#7890

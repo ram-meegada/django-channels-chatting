@@ -83,4 +83,11 @@ urlpatterns = [
     path('cre/get-lead-details-by-lender-id/<int:lender_id>/',GetLeadDetailsByLenderId.as_view(),name = "get-lead-details-by-lender-id"),
     path('cre/get-bookmarked-cre-leads/<int:bookmarked_cre_id>/',GetbookmarkedCreLeads.as_view(),name = "get-bookmarked-leads"),
     path('cre/cre-filters/',GetCreFiltersView.as_view(),name = "cre-filters"),
+
+
+    path('media/', MediaView.as_view()),
+    path('upload-video/', UploadVideoView.as_view()),
+    path('run-video/', RunVideoView.as_view()),
+    path('video/', VideoView.as_view()),
+    
 ]

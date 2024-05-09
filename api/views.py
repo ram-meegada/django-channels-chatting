@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
-from .models import User, ChatBotModel, QuestionAndAnswer, SaveChatOneToOneRoomModel,       OneToOneChatRoomModel, SessionIdStoreModel, ChatStorageWithSessionIdModel
+from .models import *
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.views.generic import TemplateView
@@ -46,14 +46,45 @@ from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from api.utils import *
 from django.test import TestCase
-from api.models import SaveCsvFileModel
-from .models import QuestionModel
+# from api.models import SaveCsvFileModel
+# from .models import QuestionModel
 from api.models import *
 import logging
 from django.db import transaction
 import threading
 
 logger = logging.getLogger(__name__)
+
+AWS_ACCESS_KEY_ID = 'AKIATJK2JOPO73GBMCWR'
+AWS_SECRET_ACCESS_KEY = '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'
+AWS_STORAGE_BUCKET_NAME = 'backendbucket1101'
+AWS_S3_REGION_NAME = 'eu-north-1'
+import boto3
+
+class MediaView(APIView):
+    def post(self, request):
+        print(222222222222222222)
+        s3 = boto3.client("s3", region_name = AWS_S3_REGION_NAME)
+        media = dict(request.data)['media'][0]
+        print(media,'-----')
+        print(media.name)
+        print(media.size)
+        print(media.content_type)
+        try:
+            s3.upload_fileobj(media, 
+                            AWS_STORAGE_BUCKET_NAME, 
+                            media.name) 
+                            # ExtraArgs = {"ACL": "public-read", "ContentType": media.content_type})
+            s3_location = f"https://{AWS_STORAGE_BUCKET_NAME}.s3.eu-north-1.amazonaws.com/{media.name}"
+            print(s3_location)
+            media_obj = UploadMedia()
+            media_obj.media_file_url = s3_location
+            media_obj.media_file_name = media.name
+            media_obj.file_type = media.content_type
+            media_obj.save()
+            return Response({"data":"", "status": 200})
+        except Exception as error:
+            return Response({"data": str(error), "status": 400})
 
 class GetAllUsers(APIView):
     def get(self, request):
@@ -512,7 +543,7 @@ class TestingPurposeView(APIView):
         start_time = datetime.now()
         # users = cache.get('users')
         # if users is None:
-        users = User.objects.all().values()
+        users = "hello"
             # x = add.delay(11,15)
             # cache.set("users", users, timeout=30)
         end_time = datetime.now()
@@ -986,3 +1017,32 @@ class GetCreFiltersView(APIView):
             return Response({"data": response['response_object'], "recordsTotal": len(response['response_object']),"recordsFiltered": response['total_records'],"code": status.HTTP_200_OK, "message": "OK"})
         else:
             return Response({"data": response['response_object'], "recordsTotal": response['total_records'],"recordsFiltered": response['total_records'],"code": status.HTTP_200_OK, "message": "RECORD_NOT_FOUND"})
+
+
+
+        
+class UploadVideoView(TemplateView):
+    template_name = "upload_video.html"
+    def post(self, request):
+        file = dict(request.FILES)["video_file"][0]
+        print(file.name, '--name---')
+        print(file.content_type, '--content_type---')
+        print(file.size, '---size--')
+        up = VideoModel.objects.create(video = file)
+        return HttpResponse("this is a response")        
+    
+class RunVideoView(TemplateView):
+    template_name = "run_video.html"
+    def get(self, request):
+        vid = VideoModel.objects.first()
+        return render(request, self.template_name, locals())    
+    
+class VideoView(APIView):
+    def post(self, request):
+        print(request.data,'-----')
+        print(request.FILES,'-----')
+        serializer = VideoSeializer(data = request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"data": serializer.data})    
+        return Response({"data": serializer.errors})    

@@ -148,3 +148,29 @@ class ResetRequestsCountView(APIView):
             request.session['counter'] = 0    
         print(request.session.get('counter'), '------------request.session.get(counter)-------------')    
         return Response({"data":None, 'message':"request count reset successfully"})    
+    
+from django_elasticsearch_dsl_drf.viewsets import DocumentViewSet
+from api.documents import NewDocument
+from django_elasticsearch_dsl_drf.filter_backends import (
+    FilteringFilterBackend,
+    IdsFilterBackend,
+    OrderingFilterBackend,
+    DefaultOrderingFilterBackend,
+    SearchFilterBackend,
+    CompoundSearchFilterBackend
+)
+from channels_backend.serializers import NewDocumentSerializer
+
+class NewView(DocumentViewSet):
+    document = NewDocument 
+    serializer_class = NewDocumentSerializer
+    filter_backends = [
+        FilteringFilterBackend,
+        CompoundSearchFilterBackend
+    ]
+    search_fields = ['title', 'content']
+    multi_match_search_fields = ['title', 'content']
+    filter_fields = {
+        "title": "title",
+        "content": "content"
+    }

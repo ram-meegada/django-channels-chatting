@@ -26,6 +26,7 @@ urlpatterns = [
     path('file/', include("filetomail.urls")),
     path('stripe/', include('stripe_app.urls')),
     path('insta/', include('insta_app.urls')),
+        
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

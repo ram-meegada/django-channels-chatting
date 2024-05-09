@@ -49,3 +49,18 @@ class ChatStorageSerializer(serializers.ModelSerializer):
         except:
             return None
         
+from django_elasticsearch_dsl_drf.serializers import DocumentSerializer
+from api.documents import NewDocument
+from channels_backend.models import ElasticSearchModel
+
+class NewDocumentSerializer(DocumentSerializer):
+    class Meta:
+        model = ElasticSearchModel
+        document = NewDocument
+        fields = ('title', 'content')
+
+        def get_location(self, obj):
+            try:
+                return obj.location.to_dict()
+            except:
+                return {}
