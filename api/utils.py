@@ -1,19 +1,19 @@
-import json
-import string
-import random
-import nltk
-import numpy as num
-from nltk.stem import WordNetLemmatizer # It has the ability to lemmatize.
-import tensorflow as tensorF # A multidimensional array of elements is represented by this symbol.
-from tensorflow import keras
-from keras import Sequential # Sequential groups a linear stack of layers into a tf.keras.Model
-from keras.layers import Dense, Dropout
-# from chatbotContent import data
-nltk.download("punkt")# required package for tokenization
-nltk.download("wordnet")# word database
-from spellchecker import SpellChecker
-from nltk.tag import pos_tag
-from .models import User
+# import json
+# import string
+# import random
+# import nltk
+# import numpy as num
+# from nltk.stem import WordNetLemmatizer # It has the ability to lemmatize.
+# import tensorflow as tensorF # A multidimensional array of elements is represented by this symbol.
+# from tensorflow import keras
+# from keras import Sequential # Sequential groups a linear stack of layers into a tf.keras.Model
+# from keras.layers import Dense, Dropout
+# # from chatbotContent import data
+# nltk.download("punkt")# required package for tokenization
+# nltk.download("wordnet")# word database
+# from spellchecker import SpellChecker
+# from nltk.tag import pos_tag
+# from .models import User
 
 
 def chatbot_func(newMessage, data, dataframe_pattern_words, ourClasses, ourNewModel):
@@ -169,7 +169,7 @@ def train_data(data):
     ourNewModel.add(Dropout(0.3))
     ourNewModel.add(Dense(oShape, activation = "softmax"))
     # below is a callable that returns the value to be used with no arguments   decay=1e-6
-    md = tensorF.keras.optimizers.Adam(learning_rate=0.01)
+    # md = tensorF.keras.optimizers.Adam(learning_rate=0.01)
     # Below line improves the numerical stability and pushes the computation of the probability distribution into the categorical crossentropy loss function.
     ourNewModel.compile(loss='categorical_crossentropy', optimizer=md, metrics=["accuracy"])
     # Output the model in summary

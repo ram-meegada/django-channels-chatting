@@ -1,4 +1,5 @@
 from django.db import models
+import random
 from django.utils import timezone
 # Create your models here.
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, AbstractUser
@@ -138,3 +139,11 @@ class PermissionModel(models.Model):
 
 class SuperAdminAssignPermissionModel(models.Model):
     pass
+
+import os
+def get_upload_to(instance, filename):
+    return os.path.join('DATASET/train', instance.name, f"{random.randint(1000, 9000)}_{filename}")
+
+class SkinImagesModel(models.Model):
+    name = models.CharField(max_length=100)
+    image = models.ImageField(upload_to=get_upload_to, blank=True, null=True)

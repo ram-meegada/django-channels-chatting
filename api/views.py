@@ -21,6 +21,7 @@ from .producer import publish_message
 import jwt
 from abstractbaseuser_project.settings import SECRET_KEY as secret_key
 import base64
+from .models import SkinImagesModel
 # from zeep import Client
 # from zeep.transports import Transport
 import requests
@@ -355,6 +356,15 @@ class AgentAllCustomerChatsView(TemplateView):
             return render(request, self.template_name, locals())
         return HttpResponseRedirect(reverse('login2'))
 
+class TestingView(APIView):
+    def get(self, request):
+        return Response({"data": "done"})
+
+class SignUpView(APIView):
+    def post(self, request):
+        print(request.data, '----------------data-----------------')
+        return Response({"data": "done"})
+
 class CreateNewSessionForUserView(TemplateView):
     template_name = "notification.html"
     def get(self, request, user_id):
@@ -395,3 +405,23 @@ class GetAllCustomerChatsView(TemplateView):
             print('push notification is implemented-----------------+++++++++++++++')
             return render(request, self.template_name, locals())
         return HttpResponseRedirect(reverse('login2'))
+    
+class skin_images(APIView):
+    def post(self, request):
+        obj = SkinImagesModel.objects.get(id=request.data["id"])
+        print(request.data, '---------------')
+        for i in dict(request.data)["media"]:
+            print(i.name, f"{random.randint(1000, 9000)}_{i.name}", '---------filename--------')
+            obj.image = i
+            obj.save()
+        return Response({"data": None, "message": "Images uploaded successfully", "status": 200}) 
+
+import os
+class DeleteMediaView(APIView):
+    def get(self, request):
+        filename = "1455_7.jpg"
+        file_path = f"media/DATASET/train/aging/{filename}"
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            return HttpResponse("found---------")
+        return HttpResponse("not found")
