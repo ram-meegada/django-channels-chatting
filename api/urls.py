@@ -52,5 +52,6 @@ urlpatterns = [
     path('books/', ListingApiView.as_view(), name='listing'),
     path('book/<int:book_id>/', GetBookByIdView.as_view(), name='book_by_id'),
     path('ppt-to-pdf/', PptToPdfView.as_view(), name='ppt_to_pdf'),
+    path('word-to-pdf/', WordToPdfView.as_view(), name='word_to_pdf'),
 
 ]

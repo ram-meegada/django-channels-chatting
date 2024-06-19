@@ -460,3 +460,37 @@ class PptToPdfView(APIView):
         convert(input_dir, output_dir)
         # shutil.rmtree(input_dir)
         return Response({"data": "", "message": "Done", "status": 200})
+    
+class WordToPdfView(APIView):
+    def post(self, request):
+        from docx2pdf import convert
+
+        file = request.FILES.get("file")
+        generate_name = generate_file_name(file.name)
+        FILE_NAME = generate_name[0]
+        EXTENSION = generate_name[1]
+        name = f"{random.randint(1000, 9999)}_{FILE_NAME}"
+        output_path = os.path.join(os.getcwd(), f"{name}.pdf")
+        input_path = os.path.join(os.getcwd(), f"{name}.{EXTENSION}")
+        fs = FileSystemStorage()
+        fs.save(input_path, file)
+        convert(input_path=input_path, output_path=output_path)
+        if os.path.exists(input_path):
+            os.remove(input_path)
+        if os.path.exists(output_path):
+            os.remove(output_path)
+        return Response({"data": "", "message": "Done", "status": 200})
+    
+def generate_file_name(name):
+    import string
+    char = string.ascii_letters + string.digits + "."
+    for i in name:
+        if i not in char:
+            name = name.replace(i, '')
+    for j in range(len(name)-1, -1, -1):
+        if name[j] == ".":
+            extension = name[j+1:]
+            file_name = name[:j]
+            break
+    result = [file_name, extension]    
+    return result
