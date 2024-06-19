@@ -26,8 +26,10 @@ SECRET_KEY = 'django-insecure-2-!yajfk=q*le&@fi+*^741ykk@1@8h(n45swamf$fu9ts4s*3
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
+
 CSRF_TRUSTED_ORIGINS = [
     'https://a8d1-122-160-196-233.ngrok-free.app',  
+    'http://localhost:5173'
 ]
 
 # Application definition
@@ -66,6 +68,11 @@ MIDDLEWARE = [
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
+    "http://localhost:5173",
+]
+
+CORS_ORIGIN_WHITELIST = [
+    "http://localhost:5173",
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
@@ -82,8 +89,11 @@ CORS_ALLOW_METHODS = (
 CORS_ALLOW_HEADERS = (
     "accept",
     "authorization",
-    "content-type",
+    "Content-Type",
     "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+    "multipart/form-data",
     "x-csrftoken",
     "x-requested-with",
 )
@@ -133,7 +143,7 @@ DATABASES = {
 # }
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=10),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=840),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=10)
 }
 
@@ -238,6 +248,9 @@ RABBITMQ_PASSWORD = 'ram'
 import os
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 
 WEBPUSH_SETTINGS = {
    "VAPID_PUBLIC_KEY": "BOxaYei1QlBslArXsZBavMXemGr8uMoaXXhjhog_neGAEKkpC5ULWluV_DMMXp4atym6MBF-46uXyPVbJErIibk",

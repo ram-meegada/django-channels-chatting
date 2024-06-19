@@ -25,27 +25,21 @@ urlpatterns = [
     path('agent/logout/', LogoutAgentUser.as_view(), name='logoutagent'),
 
     path('checking/', CheckRabbitMqApi.as_view(), name='checking'),
-    path('registration/', RegistrationApi.as_view(), name='registration'),
     path('user/update/<int:id>/', UpdateUserAPI.as_view(), name='UpdateUser'),
     path('user/delete/<int:id>/', DeleteUserAPI.as_view(), name='DeleteUser'),
     
-    path('user/login/', LoginApiView.as_view(), name='loginapiview'),
     path('user/<int:user_id>/', GetUserByIdView.as_view(), name='user_detail'),
     path('admin-user/<int:user_id>/', IsAdminUserView.as_view(), name='isadmin'),
 
-
     path('user/chatting/<int:user1>/<int:user2>/', ChattingView.as_view(), name='chatting'),
-
 
     path('user/create-new-session/<int:user_id>/', CreateNewSessionForUserView.as_view(), name='create_new_session'),
     path('user/all-chat-sessions/<int:user_id>/', GetAllCustomerChatsView.as_view(), name='customer_all_chats'),
-
 
     path('user/chat-with-chatbot/<int:user_id>/<str:session_id>/', ChatWithChatbotAndAgentView.as_view(), name='notification'),
     path('queued-session-chats/', GetAllQueuedChatsToAdminView.as_view(), name='queuedsession'),
     path('assign-agent-to-user-session/<str:session>/<str:user>/', AdminAssignAgentToUserSessionView.as_view(), name='assignagent'),
     path('agent/all-customer-chats/', AgentAllCustomerChatsView.as_view(), name="agentallcustomerchats"),
-
 
     path('testing/', TestingView.as_view(), name="testing"),
     path('signup/', SignUpView.as_view(), name="signup"),
@@ -53,5 +47,10 @@ urlpatterns = [
     path('skins/', skin_images.as_view(), name="skins"),
     path('delete-media/', DeleteMediaView.as_view(), name="delete-skins"),
 
+    path('registration/', RegistrationApi.as_view(), name='registration'),
+    path('user/login/', LoginApiView.as_view(), name='loginapiview'),
+    path('books/', ListingApiView.as_view(), name='listing'),
+    path('book/<int:book_id>/', GetBookByIdView.as_view(), name='book_by_id'),
+    path('ppt-to-pdf/', PptToPdfView.as_view(), name='ppt_to_pdf'),
 
 ]

@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import User, ChatBotModel, QuestionAndAnswer, SaveChatOneToOneRoomModel, OneToOneChatRoomModel,\
+from .models import User, Books, QuestionAndAnswer, SaveChatOneToOneRoomModel, OneToOneChatRoomModel,\
                     SessionIdStoreModel, ChatStorageWithSessionIdModel
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -28,6 +28,7 @@ import requests
 from django.conf import settings
 from webpush import send_user_notification
 from django.shortcuts import get_object_or_404
+from django.core.files.storage import FileSystemStorage
 
 # Create your views here.
 class GetAllUsers(APIView):
@@ -210,8 +211,8 @@ class RegistrationApi(APIView):
             x.set_password(password)
             x.save()
             # publish_message('user_created', request.data)
-            return Response({'data':serializer.data})
-        return Response({"data":serializer.errors})
+            return Response({'data':serializer.data, "message": "Registration successfull", "status": 200})
+        return Response({"data":serializer.errors, "message": "Something went wrong", "status": 400})
 
 class UpdateUserAPI(APIView):
     permission_classes = [IsAuthenticated]
@@ -242,15 +243,15 @@ class LoginApiView(APIView):
             print('came here')
             user = User.objects.get(email=email)
         except Exception as e:
-            data = {"user":"some error"}
+            data = {"data": None, "message": "User does not exist", "status": 400}
             return Response(data)   
         chk_pwd = check_password(password, user.password)
         if chk_pwd:
             token = RefreshToken.for_user(user)
             data = {"user":user.email,"access_token":str(token.access_token),"refresh_token":str(token)}
-            return Response({"data":data})
+            return Response({"data":data, "message": "Successfully logged In", "status": 200})
         else:
-            data = {"user":user.email,'message':"wrong password"}
+            data = {"user":user.email, 'message':"wrong password", "status": 400}
             return Response(data)
 
 class GetUserByIdView(APIView):
@@ -358,7 +359,7 @@ class AgentAllCustomerChatsView(TemplateView):
 
 class TestingView(APIView):
     def get(self, request):
-        return Response({"data": "done"})
+        return Response({"data": "RAM"})
 
 class SignUpView(APIView):
     def post(self, request):
@@ -423,5 +424,39 @@ class DeleteMediaView(APIView):
         file_path = f"media/DATASET/train/aging/{filename}"
         if os.path.exists(file_path):
             os.remove(file_path)
-            return HttpResponse("found---------")
+            return HttpResponse("found----")
         return HttpResponse("not found")
+    
+class ListingApiView(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        books = Books.objects.all().values("id", "name", "price")
+        return Response({"data": books, "message": "Books fetched successfully", "status": 200})
+
+class GetBookByIdView(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request, book_id):
+        book = Books.objects.get(id=book_id)
+        data = {
+            "id": book.id,
+            "name": book.name,
+            "price": book.price
+        }
+        return Response({"data": data, "message": "Book fetched successfully", "status": 200})
+
+class PptToPdfView(APIView):
+    def post(self, request):
+        import shutil
+        from pptxtopdf import convert
+        file = request.FILES.get("file")
+        FILE_NAME = file.name
+        file_name = file.name.replace(" ", '').split(".")[0]
+        name = f"{random.randint(1000, 9999)}_{file_name}"
+        # create_directory = os.mkdir(name)
+        fs = FileSystemStorage()
+        fs.save(f"{name}/{FILE_NAME}", file)
+        input_dir = f"C:/Users/dell/Desktop/Django Practice/django-channels-chatting/media/{name}"
+        output_dir = f"C:/Users/dell/Desktop/Django Practice/django-channels-chatting/media/{name}"
+        convert(input_dir, output_dir)
+        # shutil.rmtree(input_dir)
+        return Response({"data": "", "message": "Done", "status": 200})

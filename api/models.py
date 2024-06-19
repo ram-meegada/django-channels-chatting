@@ -147,3 +147,8 @@ def get_upload_to(instance, filename):
 class SkinImagesModel(models.Model):
     name = models.CharField(max_length=100)
     image = models.ImageField(upload_to=get_upload_to, blank=True, null=True)
+
+class Books(models.Model):
+    name = models.CharField(max_length=100)
+    price = models.FloatField()
+    
