@@ -25,7 +25,6 @@ urlpatterns = [
     path('agent/logout/', LogoutAgentUser.as_view(), name='logoutagent'),
 
     path('checking/', CheckRabbitMqApi.as_view(), name='checking'),
-    path('user/update/<int:id>/', UpdateUserAPI.as_view(), name='UpdateUser'),
     path('user/delete/<int:id>/', DeleteUserAPI.as_view(), name='DeleteUser'),
     
     path('user/<int:user_id>/', GetUserByIdView.as_view(), name='user_detail'),
@@ -49,9 +48,16 @@ urlpatterns = [
 
     path('registration/', RegistrationApi.as_view(), name='registration'),
     path('user/login/', LoginApiView.as_view(), name='loginapiview'),
+    path('user/', GetUserByTokenView.as_view(), name='userdetailsbytoken'),
     path('books/', ListingApiView.as_view(), name='listing'),
     path('book/<int:book_id>/', GetBookByIdView.as_view(), name='book_by_id'),
+    path('user/update/', UpdateUserAPI.as_view(), name='UpdateUser'),
+    path('change-password/', ChangePassword.as_view()),
+
     path('ppt-to-pdf/', PptToPdfView.as_view(), name='ppt_to_pdf'),
     path('word-to-pdf/', WordToPdfView.as_view(), name='word_to_pdf'),
+
+    path('send-otp/', SendOtpView.as_view()),
+    path('verify-otp/', VerifyOtp.as_view()),
 
 ]

@@ -1,15 +1,19 @@
+import os
 from django.shortcuts import render
-from .models import User, Books, QuestionAndAnswer, SaveChatOneToOneRoomModel, OneToOneChatRoomModel,\
-                    SessionIdStoreModel, ChatStorageWithSessionIdModel
+from .models import User, Books, QuestionAndAnswer, SaveChatOneToOneRoomModel, OneToOneChatRoomModel, \
+    SessionIdStoreModel, ChatStorageWithSessionIdModel
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.views.generic import TemplateView
-from .serializers import CreateChatbotSerializer, QASerializer, UserSerializer, ChatSerializer
+from .serializers import CreateChatbotSerializer, QASerializer, UserSerializer, ChatSerializer, GetUserSerializer
 from rest_framework import status
-import string, random, json
+import string
+import random
+import json
 from api.utils import get_all_chats
 from api.tasks import add, send_apikey_to_mail
 import ast
+from django.db.models import Q
 from rest_framework.permissions import IsAuthenticated
 from django.http import HttpResponseRedirect, HttpResponse
 from django.urls import reverse
@@ -21,7 +25,7 @@ from .producer import publish_message
 import jwt
 from abstractbaseuser_project.settings import SECRET_KEY as secret_key
 import base64
-from .models import SkinImagesModel
+from .models import *
 # from zeep import Client
 # from zeep.transports import Transport
 import requests
@@ -29,28 +33,35 @@ from django.conf import settings
 from webpush import send_user_notification
 from django.shortcuts import get_object_or_404
 from django.core.files.storage import FileSystemStorage
-
+from django.contrib.auth import password_validation
+from threading import Thread
 # Create your views here.
+
+
 class GetAllUsers(APIView):
     def get(self, request):
         users = User.objects.all().values()
         return Response(users)
-    
+
+
 class ChatbotView(TemplateView):
     def get(self, request):
         return render(request, 'homepage.html')
-    
+
+
 class ChannelLayersView(TemplateView):
     def get(self, request, group_name):
-        return render(request, 'index.html', context={'groupname':group_name})
-    
+        return render(request, 'index.html', context={'groupname': group_name})
+
+
 class CreateChatbot(APIView):
     def post(self, request):
         serializer = CreateChatbotSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-        return Response({'data':None})
-    
+        return Response({'data': None})
+
+
 class ApiKeyView(APIView):
     def post(self, request, format=None):
         generated_api_key = self.generate_api_key_func()
@@ -66,14 +77,15 @@ class ApiKeyView(APIView):
             send_apikey_to_mail.delay(user_details.email, generated_api_key)
             # x = add.apply_async(args=[3, 5])
             print('=================value======================')
-            return Response({"data":serialized_data, "code":status.HTTP_200_OK, "message": "Your unique api key is successfully sent your mail"})    
-        return Response({"data":serializer.errors, "code":status.HTTP_400_BAD_REQUEST, "message": "Something went wrong. Please try again"})    
+            return Response({"data": serialized_data, "code": status.HTTP_200_OK, "message": "Your unique api key is successfully sent your mail"})
+        return Response({"data": serializer.errors, "code": status.HTTP_400_BAD_REQUEST, "message": "Something went wrong. Please try again"})
 
     def generate_api_key_func(self):
         characters = list(string.ascii_letters + string.digits)
         key = ''.join(random.choices(characters, weights=None, k=32))
-        return key    
-    
+        return key
+
+
 class UserUploadFileView(APIView):
     def post(self, request):
         user = request.data.get('user_id')
@@ -93,22 +105,24 @@ class UserAddQuestionView(APIView):
             pass
         if user_obj:
             data = ast.literal_eval(user_obj.data_set)
-            data.append({f"question":question, "answer":answer})
+            data.append({f"question": question, "answer": answer})
             user_obj.data_set = data
             user_obj.save()
         elif user_obj is None:
             data = []
-            data.append({"question1":question, "answer":answer})
-            user_obj = QuestionAndAnswer.objects.create(user_id_id=user_id, data_set=data)    
-        return Response({"data":None, "message":"Added succesfully"})
-    
+            data.append({"question1": question, "answer": answer})
+            user_obj = QuestionAndAnswer.objects.create(
+                user_id_id=user_id, data_set=data)
+        return Response({"data": None, "message": "Added succesfully"})
+
+
 class EditQuestionsByUser(APIView):
     def get(self, request):
         user_id = request.data.get('user_id')
         try:
             user_obj = QuestionAndAnswer.objects.get(user_id=user_id)
         except:
-            return Response({"data":None, "message":"User not found"})
+            return Response({"data": None, "message": "User not found"})
 
     def put(self, request):
         question_num = request.data.get('question_number')
@@ -119,15 +133,15 @@ class EditQuestionsByUser(APIView):
         try:
             user_obj = QuestionAndAnswer.objects.get(user_id=user_id)
         except:
-            return Response({"data":None, "message":"User not found"})
+            return Response({"data": None, "message": "User not found"})
         if user_obj:
             data_set = user_obj.data_set
             data = ast.literal_eval(data_set)
-            data[question_num-1] = {"question":question, "answer":answer}
+            data[question_num-1] = {"question": question, "answer": answer}
             user_obj.data_set = data
             user_obj.save()
-        return Response({"data":None, "message":"Edited succesfully"})
-    
+        return Response({"data": None, "message": "Edited succesfully"})
+
 
 class DeleteQuestionsByUser(APIView):
     def delete(self, request):
@@ -137,27 +151,26 @@ class DeleteQuestionsByUser(APIView):
         try:
             user_obj = QuestionAndAnswer.objects.get(user_id=user_id)
         except:
-            return Response({"data":None, "message":"User not found"})
+            return Response({"data": None, "message": "User not found"})
         if user_obj:
             data = ast.literal_eval(user_obj.data_set)
             del data[question_num-1]
             user_obj.data_set = data
             user_obj.save()
-        return Response({"data":None, "message":"deleted succesfully"})
-    
-    
-        
-    
-    
+        return Response({"data": None, "message": "deleted succesfully"})
+
 
 class CheckingView(APIView):
     permission_classes = [IsAuthenticated]
+
     def get(self, request):
         pass
 
+
 class LoginUser(TemplateView):
     template_name = 'login.html'
-    def post(self,request):
+
+    def post(self, request):
         print('came to post ')
         email = request.POST['email']
         password = request.POST['password']
@@ -166,26 +179,32 @@ class LoginUser(TemplateView):
             login(request, user)
             return HttpResponseRedirect(reverse('all-chats'), locals())
         else:
-            messages.error(request, f"the credentials u entered r incorrect")   
-            return HttpResponseRedirect(reverse('login'))    
+            messages.error(request, f"the credentials u entered r incorrect")
+            return HttpResponseRedirect(reverse('login'))
+
 
 class ChattingView(TemplateView):
     template_name = "homepage.html"
+
     def get(self, request, user1, user2):
         if not request.user.is_authenticated:
             return HttpResponseRedirect(reverse('login'))
         logged_in_user = User.objects.get(email=request.user)
         sender = logged_in_user.first_name
         try:
-            room = OneToOneChatRoomModel.objects.get(room_name=f'chat_{user1}_{user2}')
-            all_messages = SaveChatOneToOneRoomModel.objects.filter(room_id = room.id)
+            room = OneToOneChatRoomModel.objects.get(
+                room_name=f'chat_{user1}_{user2}')
+            all_messages = SaveChatOneToOneRoomModel.objects.filter(
+                room_id=room.id)
         except:
             pass
         return render(request, self.template_name, locals())
-        
+
+
 class DisplayAllchats(TemplateView):
     # permission_classes = [IsAuthenticated]
     template_name = "all_chats.html"
+
     def get(self, request):
         if not request.user.is_authenticated:
             return HttpResponseRedirect(reverse('login'))
@@ -193,98 +212,139 @@ class DisplayAllchats(TemplateView):
         all_chats = get_all_chats(user_id)
         # data = {'email':user_email, 'all_chats':all_chats}
         return render(request, self.template_name, locals())
-    
-    
+
+
 class CheckRabbitMqApi(APIView):
     def get(self, request):
         publish_message("success")
-        return Response({'data':None, 'message':'done'})    
-    
+        return Response({'data': None, 'message': 'done'})
+
 
 class RegistrationApi(APIView):
     def post(self, request):
-        print(request.data, 'came here=======================')
-        password = request.data['password']
-        serializer = UserSerializer(data=request.data)
-        if serializer.is_valid():
-            x = serializer.save()
-            x.set_password(password)
-            x.save()
-            # publish_message('user_created', request.data)
-            return Response({'data':serializer.data, "message": "Registration successfull", "status": 200})
-        return Response({"data":serializer.errors, "message": "Something went wrong", "status": 400})
+        print(request.data, '-----')
+        try:
+            if not request.session.get("email"):
+                request.session["email"] = request.data['email']
+            else:
+                pass
+            password = request.data['password']
+            serializer = UserSerializer(data=request.data)
+            if serializer.is_valid():
+                x = serializer.save()
+                x.set_password(password)
+                x.save()
+                # publish_message('user_created', request.data)
+                return Response({'data': serializer.data, "message": "Registration successful", "status": 200}, status=200)
+            else:
+                all_values = serializer.errors
+                return Response({"data": serializer.errors, "message": all_values[list(all_values.keys())[0]][0], "status": 400}, status=400)
+        except Exception as err:
+            print(err, type(err))
+            return Response({"data": None, "message": "Interval server error", "status": 500}, status=500)
+
 
 class UpdateUserAPI(APIView):
     permission_classes = [IsAuthenticated]
-    def put(self, request, id):
-        access_token = request.headers['Authorization'].split(' ')[-1] 
-        decoded_token = jwt.decode(access_token, key=secret_key, algorithms=['HS256'])
-        print(decoded_token, '===============decoded_token===============')
-        user = User.objects.get(id=id)
+
+    def put(self, request):
+        print(request.data, '---- data ----')
+        user = User.objects.get(id=request.user.id)
         serializer = UserSerializer(user, data=request.data)
         if serializer.is_valid():
             x = serializer.save()
-            # publish_message('user_details_updated', serializer.data)
-            return Response({'data':serializer.data})
-        return Response({"data":serializer.errors})
+            return Response({'data': serializer.data, 'status': 200})
+        return Response({"data": serializer.errors})
+
 
 class DeleteUserAPI(APIView):
     def delete(self, request, id):
         user = User.objects.get(id=id)
         user.delete()
         # publish_message('user_deleted', {"id":id})
-        return Response({'data':None})
-    
+        return Response({'data': None})
+
+
 class LoginApiView(APIView):
     def post(self, request):
         email = request.data['email']
-        password= request.data['password']
+        password = request.data['password']
         try:
             print('came here')
             user = User.objects.get(email=email)
         except Exception as e:
             data = {"data": None, "message": "User does not exist", "status": 400}
-            return Response(data)   
+            return Response(data)
         chk_pwd = check_password(password, user.password)
+        print(chk_pwd, '----chckcksncs---')
         if chk_pwd:
             token = RefreshToken.for_user(user)
-            data = {"user":user.email,"access_token":str(token.access_token),"refresh_token":str(token)}
-            return Response({"data":data, "message": "Successfully logged In", "status": 200})
+            data = {"user": user.email, "access_token": str(
+                token.access_token), "refresh_token": str(token)}
+            return Response({"data": data, "message": "Successfully logged In", "status": 200}, status=200)
         else:
-            data = {"user":user.email, 'message':"wrong password", "status": 400}
-            return Response(data)
+            data = {"user": user.email,
+                    'message': "wrong password", "status": 400}
+            return Response(data, status=400)
+
+
+class ChangePassword(APIView):
+    def put(self, request):
+        print(request.data, '------')
+        user = User.objects.get(id=request.user.id)
+        old_password = request.data.get("old_password")
+        new_password = request.data.get("new_password")
+        verify_password = check_password(old_password, user.password)
+        if verify_password:
+            user.set_password(new_password)
+            user.save()
+            return Response({"data": "", "message": "Password changed successfully"}, status=200)
+        else:
+            return Response({"data": None, "message": "Old password is wrong"}, status=400)
+
+
+class GetUserByTokenView(APIView):
+    def get(self, request):
+        try:
+            user = User.objects.get(id=request.user.id)
+        except:
+            return Response({'data': None, "message": "User not found", 'status': status.HTTP_404_NOT_FOUND}, status=400)
+        serializer = GetUserSerializer(user)
+        return Response({'data': serializer.data, "message": "Details fetched successfully", 'status': status.HTTP_200_OK}, status=200)
+
 
 class GetUserByIdView(APIView):
     def get(self, request, user_id):
         try:
             user = User.objects.get(id=user_id)
         except:
-            return Response({'data':None, 'status':status.HTTP_404_NOT_FOUND})    
+            return Response({'data': None, 'status': status.HTTP_404_NOT_FOUND})
         serializer = UserSerializer(user)
         # publish_message(serializer.data)
-        return Response({'data':serializer.data, 'status':status.HTTP_200_OK})
+        return Response({'data': serializer.data, 'status': status.HTTP_200_OK})
+
 
 class IsAdminUserView(APIView):
     def get(self, request, user_id):
         try:
             user = User.objects.get(id=user_id)
         except:
-            return Response({'data':None, 'status':status.HTTP_404_NOT_FOUND})    
+            return Response({'data': None, 'status': status.HTTP_404_NOT_FOUND})
         if user.is_superuser:
-            return Response({'data':None, 'status':status.HTTP_200_OK})
-        return Response({'data':None, 'status':status.HTTP_403_FORBIDDEN})
-    
+            return Response({'data': None, 'status': status.HTTP_200_OK})
+        return Response({'data': None, 'status': status.HTTP_403_FORBIDDEN})
 
 
-    
 class LoginUser2(TemplateView):
     template_name = 'login.html'
-    def post(self,request):
+
+    def post(self, request):
         email = request.POST['email']
         password = request.POST['password']
         user = authenticate(request, email=email, password=password)
         if user:
-            print(user, user.role_of_user, user.id, '=============user=============--------------')
+            print(user, user.role_of_user, user.id,
+                  '=============user=============--------------')
             login(request, user)
             if user.role_of_user == "2":
                 print(22222222222222222, user.id)
@@ -294,12 +354,14 @@ class LoginUser2(TemplateView):
             elif user.role_of_user == "1":
                 return HttpResponseRedirect(reverse('queuedsession'))
         else:
-            messages.error(request, f"the credentials u entered r incorrect")   
-            return HttpResponseRedirect(reverse('login2'))    
+            messages.error(request, f"the credentials u entered r incorrect")
+            return HttpResponseRedirect(reverse('login2'))
+
 
 class LoginAgent(TemplateView):
     template_name = 'login.html'
-    def post(self,request):
+
+    def post(self, request):
         email = request.POST['email']
         password = request.POST['password']
         user = authenticate(request, email=email, password=password)
@@ -307,37 +369,44 @@ class LoginAgent(TemplateView):
             login(request, user)
             return HttpResponseRedirect(reverse('agentallcustomerchats'))
         else:
-            messages.error(request, f"the credentials u entered r incorrect")   
-            return HttpResponseRedirect(reverse('login2'))    
+            messages.error(request, f"the credentials u entered r incorrect")
+            return HttpResponseRedirect(reverse('login2'))
 
-class LogoutUser(TemplateView):    
+
+class LogoutUser(TemplateView):
     def get(self, request):
         logout(request)
         return render(request, 'logout.html')
 
-class LogoutAgentUser(TemplateView):    
+
+class LogoutAgentUser(TemplateView):
     def get(self, request):
         logout(request)
         return render(request, 'logout.html')
-    
+
+
 class GetAllQueuedChatsToAdminView(TemplateView):
     template_name = "all_queued_sessions.html"
+
     def get(self, request):
         if not request.user.is_authenticated:
             return HttpResponseRedirect(reverse('login2'))
         try:
             user = User.objects.get(email=request.user)
         except:
-            return HttpResponse('NO USER FOUND==================')    
+            return HttpResponse('NO USER FOUND==================')
         if user.is_superuser:
-            queued_sessions = SessionIdStoreModel.objects.filter(is_queued=True)
+            queued_sessions = SessionIdStoreModel.objects.filter(
+                is_queued=True)
             all_agents = User.objects.filter(role_of_user='3')
             return render(request, self.template_name, locals())
         else:
             return HttpResponse('no access')
-        
+
+
 class AdminAssignAgentToUserSessionView(TemplateView):
     template_name = "all_queued_sessions.html"
+
     def get(self, request, session, user):
         if request.user.is_authenticated and request.user.role_of_user == '1':
             get_user = User.objects.get(email=user).id
@@ -345,79 +414,100 @@ class AdminAssignAgentToUserSessionView(TemplateView):
             get_session.agent_id = get_user
             get_session.is_queued = False
             get_session.save()
-            return HttpResponseRedirect(reverse('queuedsession'))    
+            return HttpResponseRedirect(reverse('queuedsession'))
         return HttpResponseRedirect(reverse('login2'))
 
-class AgentAllCustomerChatsView(TemplateView):    
+
+class AgentAllCustomerChatsView(TemplateView):
     template_name = "agent_all_chats.html"
+
     def get(self, request):
         if request.user.is_authenticated and request.user.role_of_user == '3':
-            all_agent_chats = SessionIdStoreModel.objects.filter(agent_id=request.user.id, is_queued=False, is_resolved=False)
+            all_agent_chats = SessionIdStoreModel.objects.filter(
+                agent_id=request.user.id, is_queued=False, is_resolved=False)
             user = request.user.first_name
             return render(request, self.template_name, locals())
         return HttpResponseRedirect(reverse('login2'))
 
+
 class TestingView(APIView):
     def get(self, request):
         return Response({"data": "RAM"})
+
 
 class SignUpView(APIView):
     def post(self, request):
         print(request.data, '----------------data-----------------')
         return Response({"data": "done"})
 
+
 class CreateNewSessionForUserView(TemplateView):
     template_name = "notification.html"
+
     def get(self, request, user_id):
         username_in_chatting = request.user.first_name
         session_id = self.create_session_id()
         print(session_id, '--------------create_session_for_customer------------------')
-        save_session_of_customer = SessionIdStoreModel.objects.create(session_id=session_id, user_id=user_id)
-        print(save_session_of_customer.session_id, '--------------------------------save_session_of_customer=======================')
+        save_session_of_customer = SessionIdStoreModel.objects.create(
+            session_id=session_id, user_id=user_id)
+        print(save_session_of_customer.session_id,
+              '--------------------------------save_session_of_customer=======================')
         return HttpResponseRedirect(reverse('notification', args=[user_id, session_id]))
 
     def create_session_id(self):
-        id = base64.b64encode(str(random.randint(100000, 999999)).encode()).decode()
+        id = base64.b64encode(
+            str(random.randint(100000, 999999)).encode()).decode()
         return id
-    
+
+
 class ChatWithChatbotAndAgentView(TemplateView):
     template_name = "notification.html"
+
     def get(self, request, user_id, session_id):
         print(request.user, '-------------request.user---------')
 
         if request.user.is_authenticated and (request.user.id == user_id or request.user.role_of_user == '3'):
             profile_picture = request.user.profile_picture
-            print(profile_picture, '------------profile_pictureprofile_pictureprofile_picture-------------')
-            get_session_foreign_key = SessionIdStoreModel.objects.get(session_id=session_id)
-            get_chat_of_customer_session = ChatStorageWithSessionIdModel.objects.filter(session_id=get_session_foreign_key).values('user_input')
+            print(profile_picture,
+                  '------------profile_pictureprofile_pictureprofile_picture-------------')
+            get_session_foreign_key = SessionIdStoreModel.objects.get(
+                session_id=session_id)
+            get_chat_of_customer_session = ChatStorageWithSessionIdModel.objects.filter(
+                session_id=get_session_foreign_key).values('user_input')
             username_in_chatting = request.user.first_name
             return render(request, self.template_name, locals())
         return HttpResponseRedirect(reverse('login2'))
 
+
 class GetAllCustomerChatsView(TemplateView):
     template_name = "customerConversations.html"
+
     def get(self, request, user_id):
         if request.user.is_authenticated and request.user.role_of_user == '2':
-            all_user_sessions = SessionIdStoreModel.objects.filter(user_id=user_id)[::-1]
+            all_user_sessions = SessionIdStoreModel.objects.filter(user_id=user_id)[
+                ::-1]
             user = request.user.id
-            payload = {'head': request.user.email, 'body': 'your chats fetcheded successfully'}
+            payload = {'head': request.user.email,
+                       'body': 'your chats fetcheded successfully'}
             user_obj = get_object_or_404(User, pk=request.user.id)
             send_user_notification(user=user_obj, payload=payload, ttl=1000)
             print('push notification is implemented-----------------+++++++++++++++')
             return render(request, self.template_name, locals())
         return HttpResponseRedirect(reverse('login2'))
-    
+
+
 class skin_images(APIView):
     def post(self, request):
         obj = SkinImagesModel.objects.get(id=request.data["id"])
         print(request.data, '---------------')
         for i in dict(request.data)["media"]:
-            print(i.name, f"{random.randint(1000, 9000)}_{i.name}", '---------filename--------')
+            print(i.name, f"{random.randint(1000, 9000)}_{i.name}",
+                  '---------filename--------')
             obj.image = i
             obj.save()
-        return Response({"data": None, "message": "Images uploaded successfully", "status": 200}) 
+        return Response({"data": None, "message": "Images uploaded successfully", "status": 200})
 
-import os
+
 class DeleteMediaView(APIView):
     def get(self, request):
         filename = "1455_7.jpg"
@@ -426,15 +516,19 @@ class DeleteMediaView(APIView):
             os.remove(file_path)
             return HttpResponse("found----")
         return HttpResponse("not found")
-    
+
+
 class ListingApiView(APIView):
     permission_classes = [IsAuthenticated]
+
     def get(self, request):
         books = Books.objects.all().values("id", "name", "price")
         return Response({"data": books, "message": "Books fetched successfully", "status": 200})
 
+
 class GetBookByIdView(APIView):
     permission_classes = [IsAuthenticated]
+
     def get(self, request, book_id):
         book = Books.objects.get(id=book_id)
         data = {
@@ -444,23 +538,28 @@ class GetBookByIdView(APIView):
         }
         return Response({"data": data, "message": "Book fetched successfully", "status": 200})
 
+
 class PptToPdfView(APIView):
     def post(self, request):
         import shutil
         from pptxtopdf import convert
         file = request.FILES.get("file")
+        print(request.data, "---------")
+        if file is None:
+            return Response({"data": None, "message": "No file", "status": 400}, status=400)
         FILE_NAME = file.name
         file_name = file.name.replace(" ", '').split(".")[0]
         name = f"{random.randint(1000, 9999)}_{file_name}"
         # create_directory = os.mkdir(name)
         fs = FileSystemStorage()
         fs.save(f"{name}/{FILE_NAME}", file)
-        input_dir = f"C:/Users/dell/Desktop/Django Practice/django-channels-chatting/media/{name}"
-        output_dir = f"C:/Users/dell/Desktop/Django Practice/django-channels-chatting/media/{name}"
+        input_dir = f"C:/Users/dell/Desktop/Django Practice/django-channels-chatting/{name}"
+        output_dir = f"C:/Users/dell/Desktop/Django Practice/django-channels-chatting/{name}"
         convert(input_dir, output_dir)
-        # shutil.rmtree(input_dir)
+        shutil.rmtree(input_dir)
         return Response({"data": "", "message": "Done", "status": 200})
-    
+
+
 class WordToPdfView(APIView):
     def post(self, request):
         from docx2pdf import convert
@@ -480,7 +579,8 @@ class WordToPdfView(APIView):
         if os.path.exists(output_path):
             os.remove(output_path)
         return Response({"data": "", "message": "Done", "status": 200})
-    
+
+
 def generate_file_name(name):
     import string
     char = string.ascii_letters + string.digits + "."
@@ -492,5 +592,45 @@ def generate_file_name(name):
             extension = name[j+1:]
             file_name = name[:j]
             break
-    result = [file_name, extension]    
+    result = [file_name, extension]
     return result
+
+
+def send_mail(to):
+    from django.core.mail import EmailMultiAlternatives
+    from abstractbaseuser_project.settings import EMAIL_HOST_USER
+    subject = "Otp verification"
+    text_content = "This is an important message."
+    html_content = "<p>This is an <strong>important</strong> message.</p><p>Your otp is %s</p>" % "1234"
+    msg = EmailMultiAlternatives(subject, text_content, EMAIL_HOST_USER, [to])
+    msg.attach_alternative(html_content, "text/html")
+    print("otp sent to %s" % to)
+    msg.send()
+
+
+class SendOtpView(APIView):
+    def post(self, request):
+        if User.objects.filter(email=request.data["email"]).exists():
+            return Response({"data": None, "message": "User with this email already exists", "status": 409}, status=409)
+        user, created = SendOtpModel.objects.get_or_create(email=request.data["email"], device_id=request.data["device_id"])
+        user.otp = "1234"
+        user.save()
+        Thread(target=send_mail, args=(request.data["email"], )).start()
+        return Response({"data": "", "message": "otp sent sucessfully", "status": 200})
+
+
+class VerifyOtp(APIView):
+    def post(self, request):
+        try:
+            print(request.data,'----')
+            check_otp = SendOtpModel.objects.get(email=request.data["email"])
+            OTP = request.data["otp"]
+            if check_otp.otp == OTP:
+                check_otp.otp_verified = True
+                check_otp.save()
+                return Response({"data": "", "message": "otp verified sucessfully", "status": 200}, status=200)
+            else:
+                return Response({"data": "", "message": "wrong otp", "status": 400}, status=400)
+        except Exception as err:
+            print(err)
+            return Response({"data": str(err), "message": "Something went wrong", "status": 400}, status=400)

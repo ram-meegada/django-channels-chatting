@@ -2,9 +2,9 @@ from celery import shared_task
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from abstractbaseuser_project import settings
-from celery import shared_task
+# from celery import shared_task
 
-@shared_task
+# @shared_task
 def send_apikey_to_mail(email, generated_api_key):
     print(email, '=====================came to function================')
     context = {"apikey":generated_api_key}

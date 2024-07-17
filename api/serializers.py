@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import ChatBotModel, QuestionAndAnswer, User
+import os
 
 class CreateChatbotSerializer(serializers.ModelSerializer):
     class Meta:
@@ -10,7 +11,15 @@ class CreateChatbotSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'email', 'username', 'first_name']
+        fields = ['id', 'email']
+
+class GetUserSerializer(serializers.ModelSerializer):
+    profile_picture = serializers.SerializerMethodField()
+    class Meta:
+        model = User
+        fields = ['id', 'email', 'username', 'first_name', 'profile_picture']
+    def get_profile_picture(self, obj):
+        return str(obj.profile_picture)
 
 # class ApiKeySerializer(serializers.ModelSerializer):
 #     class Meta:

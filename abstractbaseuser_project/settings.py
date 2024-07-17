@@ -27,10 +27,6 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
-CSRF_TRUSTED_ORIGINS = [
-    'https://a8d1-122-160-196-233.ngrok-free.app',  
-    'http://localhost:5173'
-]
 
 # Application definition
 
@@ -57,25 +53,18 @@ MIDDLEWARE = [
     # 'abstractbaseuser_project.securityMiddleware.DecryptionMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    "corsheaders.middleware.CorsMiddleware",
     'django.middleware.common.CommonMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
+    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
     "http://localhost:5173",
 ]
 
-CORS_ORIGIN_WHITELIST = [
-    "http://localhost:5173",
-]
-
-CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ALLOW_METHODS = (
     "DELETE",
@@ -86,17 +75,10 @@ CORS_ALLOW_METHODS = (
     "PUT",
 )
 
-CORS_ALLOW_HEADERS = (
-    "accept",
-    "authorization",
-    "Content-Type",
-    "user-agent",
-    "x-csrftoken",
-    "x-requested-with",
-    "multipart/form-data",
-    "x-csrftoken",
-    "x-requested-with",
-)
+CORS_ALLOW_HEADERS = ("*")
+
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
 
 ROOT_URLCONF = 'abstractbaseuser_project.urls'
 
@@ -124,23 +106,23 @@ ASGI_APPLICATION = 'abstractbaseuser_project.asgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
-
 # DATABASES = {
-#     'default':{
-#         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-#         'NAME': 'user_database',
-#         'USER': 'postgres',
-#         'PASSWORD' : 'Ramu@123',
-#         'HOST': 'localhost',
-#         'PORT' : '5432',
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
 #     }
 # }
+
+DATABASES = {
+    'default':{
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'user_database',
+        'USER': 'postgres',
+        'PASSWORD' : 'Ramu@123',
+        'HOST': 'localhost',
+        'PORT' : '5432',
+    }
+}
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=840),
@@ -257,3 +239,9 @@ WEBPUSH_SETTINGS = {
    "VAPID_PRIVATE_KEY": "41X7KM8MnG3EyCDMTd5A9t9kJP9Ye_eGydV5ZJdluAo",
    "VAPID_ADMIN_EMAIL": "admin@email.com"
 }
+
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Default is database-backed sessions
+SESSION_COOKIE_NAME = 'sessionid'  # Cookie name for session ID
+SESSION_COOKIE_AGE = 60  # Session cookie age in seconds (2 weeks by default)
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False  # Session does not expire when the browser closes
+SESSION_SAVE_EVERY_REQUEST = True
