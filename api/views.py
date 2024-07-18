@@ -30,7 +30,7 @@ from .models import *
 # from zeep.transports import Transport
 import requests
 from django.conf import settings
-from webpush import send_user_notification
+# from webpush import send_user_notification
 from django.shortcuts import get_object_or_404
 from django.core.files.storage import FileSystemStorage
 from django.contrib.auth import password_validation
@@ -274,7 +274,7 @@ class LoginApiView(APIView):
             user = User.objects.get(email=email)
         except Exception as e:
             data = {"data": None, "message": "User does not exist", "status": 400}
-            return Response(data)
+            return Response(data, status=400)
         chk_pwd = check_password(password, user.password)
         print(chk_pwd, '----chckcksncs---')
         if chk_pwd:
@@ -612,7 +612,7 @@ class SendOtpView(APIView):
     def post(self, request):
         if User.objects.filter(email=request.data["email"]).exists():
             return Response({"data": None, "message": "User with this email already exists", "status": 409}, status=409)
-        user, created = SendOtpModel.objects.get_or_create(email=request.data["email"], device_id=request.data["device_id"])
+        user, created = SendOtpModel.objects.get_or_create(email=request.data["email"])
         user.otp = "1234"
         user.save()
         Thread(target=send_mail, args=(request.data["email"], )).start()
@@ -623,7 +623,7 @@ class VerifyOtp(APIView):
     def post(self, request):
         try:
             print(request.data,'----')
-            check_otp = SendOtpModel.objects.get(email=request.data["email"])
+            check_otp = SendOtpModel.objects.get(email=request.data["email"], )
             OTP = request.data["otp"]
             if check_otp.otp == OTP:
                 check_otp.otp_verified = True
@@ -634,3 +634,17 @@ class VerifyOtp(APIView):
         except Exception as err:
             print(err)
             return Response({"data": str(err), "message": "Something went wrong", "status": 400}, status=400)
+
+class TestView(APIView):
+    def post(self, request):
+        TestModl.objects.create(text=request.data["text"])
+        return Response({"data": None, "message": "done", "status": 200}, status=200)
+
+class UserDetailsView(APIView):
+    def get(self, request):
+        user = User.objects.get(id=request.user.id)
+        data = {}
+        data["id"] = user.id
+        data["first_name"] = user.first_name
+        data["profile_picture"] = user.profile_picture
+        return Response({"data": data, "message": "done", "status": 200}, status=200)

@@ -190,3 +190,6 @@ class SendOtpModel(models.Model):
     device_id = models.CharField(max_length=1000, blank=True)
     otp = models.CharField(max_length=100, blank=True)
     otp_verified = models.BooleanField(default=False)
+
+class TestModl(models.Model):
+    text = models.JSONField(default=list)

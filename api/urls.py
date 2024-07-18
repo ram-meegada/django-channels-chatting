@@ -60,4 +60,6 @@ urlpatterns = [
     path('send-otp/', SendOtpView.as_view()),
     path('verify-otp/', VerifyOtp.as_view()),
 
+    path('test/', TestView.as_view()),
+    path('user/', UserDetailsView.as_view()),
 ]
