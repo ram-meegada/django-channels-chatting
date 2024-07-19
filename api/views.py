@@ -642,9 +642,12 @@ class TestView(APIView):
 
 class UserDetailsView(APIView):
     def get(self, request):
-        user = User.objects.get(id=request.user.id)
-        data = {}
-        data["id"] = user.id
-        data["first_name"] = user.first_name
-        data["profile_picture"] = user.profile_picture
-        return Response({"data": data, "message": "done", "status": 200}, status=200)
+        try:
+            user = User.objects.get(id=request.user.id)
+            data = {}
+            data["id"] = user.id
+            data["first_name"] = user.first_name
+            data["profile_picture"] = user.profile_picture
+            return Response({"data": data, "message": "done", "status": 200}, status=200)
+        except Exception as err:
+            return Response({"data": str(err), "message": "error", "status": 400}, status=400)
