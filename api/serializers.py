@@ -17,7 +17,7 @@ class GetUserSerializer(serializers.ModelSerializer):
     profile_picture = serializers.SerializerMethodField()
     class Meta:
         model = User
-        fields = ['id', 'email', 'username', 'first_name', 'profile_picture']
+        fields = ['id', 'email', 'username', 'first_name', 'profile_picture', 'last_name']
     def get_profile_picture(self, obj):
         return str(obj.profile_picture)
 
