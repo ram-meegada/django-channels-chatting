@@ -651,3 +651,10 @@ class UserDetailsView(APIView):
             return Response({"data": data, "message": "done", "status": 200}, status=200)
         except Exception as err:
             return Response({"data": str(err), "message": "error", "status": 400}, status=400)
+
+
+class AllColours(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        all_colours = ColorsModel.objects.values("id", "name")
+        return Response({"data": all_colours, "message": "Colours fetched successfully"}, status=200)

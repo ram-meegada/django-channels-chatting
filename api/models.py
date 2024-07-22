@@ -193,3 +193,6 @@ class SendOtpModel(models.Model):
 
 class TestModl(models.Model):
     text = models.JSONField(default=list)
+
+class ColorsModel(models.Model):
+    name = models.CharField(max_length=100, blank=True)

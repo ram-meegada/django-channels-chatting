@@ -62,4 +62,6 @@ urlpatterns = [
 
     path('test/', TestView.as_view()),
     # path('user/', UserDetailsView.as_view()),
+
+    path('colours/', AllColours.as_view()),
 ]
