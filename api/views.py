@@ -246,16 +246,13 @@ class RegistrationApi(APIView):
 
 class UpdateUserAPI(APIView):
     permission_classes = [IsAuthenticated]
-
     def put(self, request):
-        print(request.data, '---- data ----')
         user = User.objects.get(id=request.user.id)
-        serializer = UserSerializer(user, data=request.data)
+        serializer = UserSerializer(user, data=request.data, partial=True)
         if serializer.is_valid():
             x = serializer.save()
-            return Response({'data': serializer.data, 'status': 200})
-        return Response({"data": serializer.errors})
-
+            return Response({'data': serializer.data, 'message': "Profile updated successfully"}, status=200)
+        return Response({"data": serializer.errors, "message": "Something went wrong"}, status=400)
 
 class DeleteUserAPI(APIView):
     def delete(self, request, id):

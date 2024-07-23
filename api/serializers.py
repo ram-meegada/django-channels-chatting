@@ -11,7 +11,7 @@ class CreateChatbotSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'email']
+        fields = ['id', 'email', "first_name", "last_name"]
 
 class GetUserSerializer(serializers.ModelSerializer):
     profile_picture = serializers.SerializerMethodField()
