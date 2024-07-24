@@ -75,7 +75,6 @@ CORS_ALLOW_METHODS = (
     "PUT",
 )
 
-CORS_ALLOW_HEADERS = ("*")
 
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
@@ -118,7 +117,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'user_database',
         'USER': 'postgres',
-        'PASSWORD' : 'apptunix',
+        'PASSWORD' : 'Ramu@123',
         'HOST': 'localhost',
         'PORT' : '5432',
     }

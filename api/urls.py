@@ -64,4 +64,6 @@ urlpatterns = [
     # path('user/', UserDetailsView.as_view()),
 
     path('colours/', AllColours.as_view()),
+    path('add-color/', AddColourView.as_view()),
+    path('delete-color/<int:id>/', DeleteColourView.as_view()),
 ]
