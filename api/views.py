@@ -654,7 +654,6 @@ class AllColours(APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request):
         all_colours = ColorsModel.objects.values("id", "name")
-        print(all_colours, '----all colors-------')
         return Response({"data": all_colours, "message": "Colours fetched successfully"}, status=200)
 
 class AddColourView(APIView):
@@ -669,3 +668,11 @@ class DeleteColourView(APIView):
         color_obj = ColorsModel.objects.get(id=id)
         color_obj.delete()
         return Response({"data": None, "message": "Colour deleted successfully"}, status=200)
+
+class EditColourView(APIView):
+    permission_classes = [IsAuthenticated]
+    def put(self, request, id):
+        color_obj = ColorsModel.objects.get(id=id)
+        color_obj.name = request.data["name"]
+        color_obj.save()
+        return Response({"data": None, "message": "Colour updated successfully"}, status=200)
