@@ -653,7 +653,7 @@ class UserDetailsView(APIView):
 class AllColours(APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request):
-        all_colours = ColorsModel.objects.values("id", "name")
+        all_colours = ColorsModel.objects.values("id", "name").order_by("id")
         return Response({"data": all_colours, "message": "Colours fetched successfully"}, status=200)
 
 class AddColourView(APIView):
@@ -676,3 +676,7 @@ class EditColourView(APIView):
         color_obj.name = request.data["name"]
         color_obj.save()
         return Response({"data": None, "message": "Colour updated successfully"}, status=200)
+
+    def get(self, request, id):
+        color_obj = ColorsModel.objects.get(id=id)
+        return Response({"data": {"id": color_obj.id, "name": color_obj.name}, "message": "Colour details fetched successfully"}, status=200)
