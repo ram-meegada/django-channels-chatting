@@ -352,3 +352,13 @@ class AgentChatbotUserChatting(AsyncWebsocketConsumer):
     def create_session_id(self):
         id = base64.b64encode(str(random.randint(100000, 999999)).encode()).decode()
         return id
+    
+class ReactChatIntegrationConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        return await super().connect()
+    
+    async def receive(self, text_data=None, bytes_data=None):
+        return await super().receive(text_data, bytes_data)
+    
+    async def disconnect(self, code):
+        return await super().disconnect(code)
