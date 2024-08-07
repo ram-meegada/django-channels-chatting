@@ -355,9 +355,11 @@ class AgentChatbotUserChatting(AsyncWebsocketConsumer):
     
 class ReactChatIntegrationConsumer(AsyncWebsocketConsumer):
     async def connect(self):
+        await self.channel_layer.group_add("abc", self.channel_name)
         return await super().connect()
     
     async def receive(self, text_data=None, bytes_data=None):
+        await self.channel_layer.group_send()
         return await super().receive(text_data, bytes_data)
     
     async def disconnect(self, code):
