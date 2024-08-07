@@ -16,6 +16,6 @@ websocket_urlpatterns = [
 
     path('ws/agentuserchatting/<int:user_id>/<str:key>/<str:session>/', AgentChatbotUserChatting.as_asgi()),
 
-    path('ws/chat/', ReactChatIntegrationConsumer.as_asgi()),
+    path('ws/chat/<int:id>/', ReactChatIntegrationConsumer.as_asgi()),
 
 ]

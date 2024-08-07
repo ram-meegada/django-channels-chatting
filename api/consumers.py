@@ -355,12 +355,24 @@ class AgentChatbotUserChatting(AsyncWebsocketConsumer):
     
 class ReactChatIntegrationConsumer(AsyncWebsocketConsumer):
     async def connect(self):
+        user_id = self.kwargs['url_route']['kwargs']['id']
         await self.channel_layer.group_add("abc", self.channel_name)
+        user_details = await database_sync_to_async(self.get_user_details)()
         return await super().connect()
     
+    def get_user_details(self):
+        pass
+    
     async def receive(self, text_data=None, bytes_data=None):
-        await self.channel_layer.group_send()
+        text_data = json.loads(text_data)
+        await self.channel_layer.group_send("abc", {
+            "type": "chat_message",
+            "msg": text_data
+        })
         return await super().receive(text_data, bytes_data)
     
     async def disconnect(self, code):
         return await super().disconnect(code)
+
+    async def chat_message(self, event):
+        await self.send(text_data=json.dumps(event["msg"]))
