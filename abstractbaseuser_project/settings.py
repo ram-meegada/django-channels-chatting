@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
+from decouple import config
 from pathlib import Path
 from datetime import timedelta
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -117,9 +118,9 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'user_database',
         'USER': 'postgres',
-        'PASSWORD' : '123',
+        'PASSWORD' : 'apptunix',
         'HOST': 'localhost',
-        'PORT' : '5050',
+        'PORT' : '5432',
     }
 }
 
@@ -244,3 +245,6 @@ SESSION_COOKIE_NAME = 'sessionid'  # Cookie name for session ID
 SESSION_COOKIE_AGE = 60  # Session cookie age in seconds (2 weeks by default)
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False  # Session does not expire when the browser closes
 SESSION_SAVE_EVERY_REQUEST = True
+
+
+GOOGLE_API_KEY = config("GOOGLE_API_KEY")

@@ -7,7 +7,7 @@ websocket_urlpatterns = [
     # path('ws/ac/', MyAsyncWebsocketConsumer.as_asgi()),
 
     path('ws/chatbot/<str:key>/', MyChatBot.as_asgi()),
-    path('ws/sync-chatbot/<str:key>/', MySyncChatBot.as_asgi()),
+    path('ws/sync-chatbot/', MySyncChatBot.as_asgi()),
 
     path('ws/async-we-chatbot/<str:key>/', MyAsyncWebsocketConsumer.as_asgi()),
     #########################
@@ -16,6 +16,6 @@ websocket_urlpatterns = [
 
     path('ws/agentuserchatting/<int:user_id>/<str:key>/<str:session>/', AgentChatbotUserChatting.as_asgi()),
 
-    path('ws/chat/<int:id>/', ReactChatIntegrationConsumer.as_asgi()),
+    path('ws/chat/', ReactChatIntegrationConsumer.as_asgi()),
 
 ]
