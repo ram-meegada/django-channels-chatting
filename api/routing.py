@@ -18,4 +18,6 @@ websocket_urlpatterns = [
 
     path('ws/chat/', ReactChatIntegrationConsumer.as_asgi()),
 
+    path('file-summarization/', FileSummarizationConsumer.as_asgi()),
+
 ]
