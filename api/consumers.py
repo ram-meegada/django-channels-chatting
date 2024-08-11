@@ -492,36 +492,32 @@ class FileSummarizationConsumer(SyncConsumer):
                     "type": "websocket.close",
                     })
         while i < len(pdf_text):
-            print(self.terminate_process, '--------self.terminate_process-----')
-            if self.terminate_process:
-                break
-            else:
-                end = i+temp[j+1]
-                if end > len(pdf_text)-1:
-                    input_text = pdf_text[i:]
-                else: 
-                    input_text = pdf_text[i: end]    
-                i += temp[j+1]
-                if j >= 3:
-                    j = 3
-                else:    
-                    j += 1
-                message = HumanMessage(
-                    content=[
-                        {"type": "text",
-                            # "text": f"Generate a summary of the input I provide you and the length of the summary should be strictly atleast 2000 words and give me only text no * and extra symbols"},
-                            "text": f"Generate a summary of the input I provide you. And continue with previous response.(if previous response present)"},
-                        {"type": "text", "text": input_text}
-                    ]
-                )
-                full_response = ""
-                for chunk in llm.stream([message]):
-                    stream_chunk = chunk.content
-                    self.send({
-                    'type': 'websocket.send',
-                    'text': json.dumps({"data": stream_chunk, "signal": 1})
-                    })
-                    full_response += stream_chunk
+            end = i+temp[j+1]
+            if end > len(pdf_text)-1:
+                input_text = pdf_text[i:]
+            else: 
+                input_text = pdf_text[i: end]    
+            i += temp[j+1]
+            if j >= 3:
+                j = 3
+            else:    
+                j += 1
+            message = HumanMessage(
+                content=[
+                    {"type": "text",
+                        # "text": f"Generate a summary of the input I provide you and the length of the summary should be strictly atleast 2000 words and give me only text no * and extra symbols"},
+                        "text": f"Generate a summary of the input I provide you. And continue with previous response.(if previous response present)"},
+                    {"type": "text", "text": input_text}
+                ]
+            )
+            full_response = ""
+            for chunk in llm.stream([message]):
+                stream_chunk = chunk.content
+                self.send({
+                'type': 'websocket.send',
+                'text': json.dumps({"data": stream_chunk, "signal": 1})
+                })
+                full_response += stream_chunk
         self.send({
             'type': 'websocket.send',
             'text': json.dumps({"data": "", "signal": 0})

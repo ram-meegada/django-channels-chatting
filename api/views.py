@@ -246,6 +246,7 @@ class RegistrationApi(APIView):
 
 class UpdateUserAPI(APIView):
     permission_classes = [IsAuthenticated]
+
     def put(self, request):
         user = User.objects.get(id=request.user.id)
         serializer = UserSerializer(user, data=request.data, partial=True)
@@ -253,6 +254,7 @@ class UpdateUserAPI(APIView):
             x = serializer.save()
             return Response({'data': serializer.data, 'message': "Profile updated successfully"}, status=200)
         return Response({"data": serializer.errors, "message": "Something went wrong"}, status=400)
+
 
 class DeleteUserAPI(APIView):
     def delete(self, request, id):
@@ -609,7 +611,8 @@ class SendOtpView(APIView):
     def post(self, request):
         if User.objects.filter(email=request.data["email"]).exists():
             return Response({"data": None, "message": "User with this email already exists", "status": 409}, status=409)
-        user, created = SendOtpModel.objects.get_or_create(email=request.data["email"])
+        user, created = SendOtpModel.objects.get_or_create(
+            email=request.data["email"])
         user.otp = "1234"
         user.save()
         Thread(target=send_mail, args=(request.data["email"], )).start()
@@ -619,7 +622,7 @@ class SendOtpView(APIView):
 class VerifyOtp(APIView):
     def post(self, request):
         try:
-            print(request.data,'----')
+            print(request.data, '----')
             check_otp = SendOtpModel.objects.get(email=request.data["email"], )
             OTP = request.data["otp"]
             if check_otp.otp == OTP:
@@ -632,10 +635,12 @@ class VerifyOtp(APIView):
             print(err)
             return Response({"data": str(err), "message": "Something went wrong", "status": 400}, status=400)
 
+
 class TestView(APIView):
     def post(self, request):
         TestModl.objects.create(text=request.data["text"])
         return Response({"data": None, "message": "done", "status": 200}, status=200)
+
 
 class UserDetailsView(APIView):
     def get(self, request):
@@ -652,25 +657,32 @@ class UserDetailsView(APIView):
 
 class AllColours(APIView):
     permission_classes = [IsAuthenticated]
+
     def get(self, request):
         all_colours = ColorsModel.objects.values("id", "name").order_by("id")
         return Response({"data": all_colours, "message": "Colours fetched successfully"}, status=200)
 
+
 class AddColourView(APIView):
     permission_classes = [IsAuthenticated]
+
     def post(self, request):
         add_colour = ColorsModel.objects.create(**request.data)
         return Response({"data": None, "message": "Colour added successfully"}, status=201)
 
+
 class DeleteColourView(APIView):
     permission_classes = [IsAuthenticated]
+
     def delete(self, request, id):
         color_obj = ColorsModel.objects.get(id=id)
         color_obj.delete()
         return Response({"data": None, "message": "Colour deleted successfully"}, status=200)
 
+
 class EditColourView(APIView):
     permission_classes = [IsAuthenticated]
+
     def put(self, request, id):
         color_obj = ColorsModel.objects.get(id=id)
         color_obj.name = request.data["name"]
@@ -680,3 +692,44 @@ class EditColourView(APIView):
     def get(self, request, id):
         color_obj = ColorsModel.objects.get(id=id)
         return Response({"data": {"id": color_obj.id, "name": color_obj.name}, "message": "Colour details fetched successfully"}, status=200)
+
+
+class QuizListingView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        data = [
+            {
+                "title": "Python basics",
+                "description": """Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum is simply. simply dummy text of the printing and typesetting industry. Lorem Ipsum is simply."""
+            },
+            {
+                "title": "Javascript",
+                "description": """Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum is simply. simply dummy text of the printing and typesetting industry. Lorem Ipsum is simply."""
+            },
+            {
+                "title": "Django",
+                "description": """Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum is simply. simply dummy text of the printing and typesetting industry. Lorem Ipsum is simply."""
+            },
+            {
+                "title": "React js",
+                "description": """Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum is simply. simply dummy text of the printing and typesetting industry. Lorem Ipsum is simply."""
+            },
+        ]
+        return Response({"data": data, "message": "Quizzes fetched successfully"}, status=200)
+
+
+class GenerateQuestionView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        data = {
+            "question": "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum is simply. simply dummy text of the printing and typesetting industry.",
+            "options": [
+                "This is the option 1.",
+                "This is the option 2.",
+                "This is the option 3.",
+                "This is the option 4."
+            ]
+        }
+        return Response({"data": data, "message": "Quizzes fetched successfully"}, status=200)
