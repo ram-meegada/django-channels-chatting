@@ -79,7 +79,7 @@ class MySyncChatBot(SyncConsumer):
             stream_chunk = chunk.content
             self.send({
             'type': 'websocket.send',
-            'text': stream_chunk
+            'text': json.dumps({"data": stream_chunk, "signal": 1})
         })
             full_response += stream_chunk
 
@@ -393,6 +393,7 @@ class ReactChatIntegrationConsumer(AsyncWebsocketConsumer):
 
         google_api_key = settings.GOOGLE_API_KEY
         # text_data = json.loads(text_data)
+        print("11111111111111")
         llm = ChatGoogleGenerativeAI(model="gemini-pro", google_api_key=google_api_key)
         try:
             with open("Nature.pdf" , "rb") as file:
@@ -413,7 +414,7 @@ class ReactChatIntegrationConsumer(AsyncWebsocketConsumer):
                 stream_chunk = chunk.content
                 await self.channel_layer.group_send("abc", {
                     "type": "chat_message",
-                    "msg": {"message": stream_chunk}
+                    "msg": {"message": stream_chunk, "signal": 1}
                 })
                 print(stream_chunk, '-=-=-=-=-=-=-=-=-=-=-=-')
                 full_response += stream_chunk

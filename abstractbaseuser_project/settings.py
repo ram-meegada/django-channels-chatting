@@ -15,7 +15,7 @@ from pathlib import Path
 from datetime import timedelta
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
+from corsheaders.defaults import default_headers
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
@@ -64,18 +64,21 @@ MIDDLEWARE = [
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
+    "https://c4e4-180-188-237-29.ngrok-free.app",
 ]
 
 
 CORS_ALLOW_METHODS = (
     "DELETE",
     "GET",
-    "OPTIONS",
     "PATCH",
     "POST",
     "PUT",
 )
 
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    "Ngrok-Skip-Browser-Warning"
+]
 
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
