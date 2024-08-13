@@ -64,7 +64,7 @@ MIDDLEWARE = [
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
-    "https://c4e4-180-188-237-29.ngrok-free.app",
+    "https://393c-112-196-43-19.ngrok-free.app",
 ]
 
 
@@ -121,7 +121,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'user_database',
         'USER': 'postgres',
-        'PASSWORD' : 'Ramu@123',
+        'PASSWORD' : 'apptunix',
         'HOST': 'localhost',
         'PORT' : '5432',
     }
