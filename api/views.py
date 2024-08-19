@@ -656,7 +656,7 @@ class UserDetailsView(APIView):
 
 
 class AllColours(APIView):
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
 
     def get(self, request):
         all_colours = ColorsModel.objects.values("id", "name").order_by("id")

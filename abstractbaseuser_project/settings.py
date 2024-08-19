@@ -28,7 +28,6 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -49,39 +48,42 @@ INSTALLED_APPS = [
     'webpush',
     'corsheaders'
 ]
-
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173"
+]
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:5173',
+]
+# CSRF_COOKIE_SECURE = False
 MIDDLEWARE = [
     # 'abstractbaseuser_project.securityMiddleware.DecryptionMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
     "corsheaders.middleware.CorsMiddleware",
+    'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "https://393c-112-196-43-19.ngrok-free.app",
-]
 
+# CSRF_TRUSTED_ORIGINS = ['http://localhost:5173']
 
-CORS_ALLOW_METHODS = (
-    "DELETE",
-    "GET",
-    "PATCH",
-    "POST",
-    "PUT",
-)
+# CORS_ALLOW_METHODS = (
+#     "DELETE",
+#     "GET",
+#     "PATCH",
+#     "POST",
+#     "PUT",
+# )
 
 CORS_ALLOW_HEADERS = list(default_headers) + [
     "Ngrok-Skip-Browser-Warning"
 ]
 
-CORS_ALLOW_ALL_ORIGINS = True
-CORS_ALLOW_CREDENTIALS = True
+# CORS_ALLOW_ALL_ORIGINS = True
+# CORS_ALLOW_CREDENTIALS = True
 
 ROOT_URLCONF = 'abstractbaseuser_project.urls'
 
@@ -121,7 +123,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'user_database',
         'USER': 'postgres',
-        'PASSWORD' : 'apptunix',
+        'PASSWORD' : 'Ramu@123',
         'HOST': 'localhost',
         'PORT' : '5432',
     }

@@ -7,7 +7,7 @@ websocket_urlpatterns = [
     # path('ws/ac/', MyAsyncWebsocketConsumer.as_asgi()),
 
     path('ws/chatbot/<str:key>/', MyChatBot.as_asgi()),
-    path('ws/sync-chatbot/', MySyncChatBot.as_asgi()),
+    path('ws/sync-chatbot/<str:session>/', MySyncChatBot.as_asgi()),
 
     path('ws/async-we-chatbot/<str:key>/', MyAsyncWebsocketConsumer.as_asgi()),
     #########################

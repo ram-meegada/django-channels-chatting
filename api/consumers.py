@@ -46,6 +46,9 @@ class MyAsyncConsumer(AsyncConsumer):
 class MySyncChatBot(SyncConsumer):
 
     def websocket_connect(self, event):
+        session = self.scope['url_route']['kwargs']['session']
+        print("Session ID:", session)
+        
         self.send({
             'type': 'websocket.accept'
         })
@@ -61,6 +64,7 @@ class MySyncChatBot(SyncConsumer):
         google_api_key = settings.GOOGLE_API_KEY
         # text_data = json.loads(text_data)
         llm = ChatGoogleGenerativeAI(model="gemini-pro", google_api_key=google_api_key)
+        input_language = "english"
         with open("Nature.pdf" , "rb") as file:
             pdf_text = ""
             pdf_stream = BytesIO(file.read())
@@ -70,7 +74,7 @@ class MySyncChatBot(SyncConsumer):
         message = HumanMessage(
             content=[
                 {"type": "text",
-                    "text": f"generate a summary of the input I provide you and the length of the summary should be strictly atleast 2000 words and give me only text no * and extra symbols"},
+                    "text": f"Generate a summary of the input I provide you in strictly HTML format in {input_language} language. Only provide the content of the body tag of html output and give headings in h4 tag only. Strictly dont give any symbols, unwanted text or characters not belongs to {input_language} language. Maintain pure language. And continue with previous response.(if previous response present)"},
                 {"type": "text", "text": pdf_text}
             ]
         )
@@ -82,7 +86,10 @@ class MySyncChatBot(SyncConsumer):
             'text': json.dumps({"data": stream_chunk, "signal": 1})
         })
             full_response += stream_chunk
-
+        self.send({
+                'type': 'websocket.send',
+                'text': json.dumps({"data": "", "signal": 0, "message": "Summary generated successfully."})
+            })
     def websocket_disconnect(self, event):
         print('websocket disconnected.....', event)
         raise StopConsumer()
@@ -375,7 +382,7 @@ class AgentChatbotUserChatting(AsyncWebsocketConsumer):
 class ReactChatIntegrationConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         # user_id = self.kwargs['url_route']['kwargs']['id']
-        await self.channel_layer.group_add("abc", self.channel_name)
+        # await self.channel_layer.group_add("abc", self.channel_name)
         # user_details = await database_sync_to_async(self.get_user_details)()
         return await super().connect()
 
@@ -392,32 +399,41 @@ class ReactChatIntegrationConsumer(AsyncWebsocketConsumer):
         from django.core.files.storage import FileSystemStorage
 
         google_api_key = settings.GOOGLE_API_KEY
-        # text_data = json.loads(text_data)
-        print("11111111111111")
+        payload = json.loads(text_data)
+        if int(payload["hit"]) == 1:
+            file_name = "Nature.pdf"
+        else:
+            file_name = "output1.pdf"
         llm = ChatGoogleGenerativeAI(model="gemini-pro", google_api_key=google_api_key)
         try:
-            with open("Nature.pdf" , "rb") as file:
+            with open(file_name , "rb") as file:
                 pdf_text = ""
                 pdf_stream = BytesIO(file.read())
                 pdf_reader = PdfReader(pdf_stream)
                 for page in pdf_reader.pages:
                     pdf_text += page.extract_text().strip() + " "
+            input_language = "English"        
             message = HumanMessage(
                 content=[
                     {"type": "text",
-                        "text": f"generate a summary of the input I provide you and the length of the summary should be strictly atleast 2000 words and give me only text no * and extra symbols"},
+                        "text": f"Generate a summary of the input I provide you in strictly HTML format in {input_language} language. Only provide the content of the body tag of html output and give headings in h4 tag only. Strictly dont give any symbols, unwanted text or characters not belongs to {input_language} language. Maintain pure language. And continue with previous response.(if previous response present)"},
                     {"type": "text", "text": pdf_text}
                 ]
             )
-            full_response = ""
-            for chunk in llm.stream([message]):
-                stream_chunk = chunk.content
-                await self.channel_layer.group_send("abc", {
-                    "type": "chat_message",
-                    "msg": {"message": stream_chunk, "signal": 1}
-                })
-                print(stream_chunk, '-=-=-=-=-=-=-=-=-=-=-=-')
-                full_response += stream_chunk
+            # result = ""
+            try:
+                async for chunk in llm.astream([message]):
+                    stream_chunk = chunk.content
+                    stream_chunk = stream_chunk.replace("*", "").replace("<body>", "").replace("</body>", "")
+                    print(stream_chunk, '----stream_chunkstream_chunkstream_chunkstream_chunk------')
+                    # for tok in stream_chunk.split(" "):
+                        # result += " " + tok
+                        # sleep(0.1)
+                    await self.send(text_data=json.dumps({"data": stream_chunk, "signal": 1}))
+            except:
+                pass
+            await self.send(text_data=json.dumps({"data": "", "signal": 0}))
+            await self.close()
 
         except Exception as err:
             await self.channel_layer.group_send("abc", {
@@ -425,13 +441,13 @@ class ReactChatIntegrationConsumer(AsyncWebsocketConsumer):
                 "msg": err
             })
         return await super().receive(text_data, bytes_data)
-
+    
     async def disconnect(self, code):
         return await super().disconnect(code)
 
     async def chat_message(self, event):
         print(event["msg"], 7777777777777777777777777777)
-        await self.send(text_data=json.dumps(event["msg"]))
+        self.send(text_data=json.dumps(event["msg"]))
 
 
 
